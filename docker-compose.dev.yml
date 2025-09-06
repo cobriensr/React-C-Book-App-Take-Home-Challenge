@@ -1,38 +1,39 @@
-# docker-compose.dev.yml
+# docker-compose.dev.yml - Optimized for Apple Silicon Macs
 
 services:
-  # SQL Server Database
+  # Azure SQL Edge - ARM64 compatible SQL database
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/azure-sql-edge:latest
     container_name: book-library-db-dev
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=YourStrong@Password123
-      - MSSQL_PID=Express
+      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
       - sqlserver_data_dev:/var/opt/mssql
     networks:
       - book-library-network-dev
+    cap_add:
+      - SYS_PTRACE
     healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong@Password123" -Q "SELECT 1" -b -o /dev/null
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong@Password123" -Q "SELECT 1" || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
       start_period: 10s
 
-  # .NET Backend API with hot reload
+  # .NET Backend API - Run with SDK for development
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: build  # Use build stage for development
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    platform: linux/arm64
     container_name: book-library-api-dev
+    working_dir: /app
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Database=BookLibraryDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=db;Database=BookLibraryDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;Encrypt=False
       - DOTNET_USE_POLLING_FILE_WATCHER=true
       - DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=true
     ports:
@@ -43,20 +44,28 @@ services:
     networks:
       - book-library-network-dev
     volumes:
-      - ./backend:/src
+      - ./backend:/app:delegated
       - ~/.nuget/packages:/root/.nuget/packages:ro
-    command: dotnet watch run --no-restore --urls http://+:8080
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        sleep 10 &&
+        echo 'Running migrations...' &&
+        dotnet ef database update || true &&
+        echo 'Starting application...' &&
+        dotnet watch run --no-restore --urls http://+:8080
+      "
 
-  # React Frontend with hot reload
+  # React Frontend - Only start if package.json exists
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: development  # Use development stage
+    image: node:20-alpine
+    platform: linux/arm64
     container_name: book-library-frontend-dev
+    working_dir: /app
     environment:
       - VITE_API_URL=http://localhost:8080
       - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=3000
     ports:
       - "3000:3000"
     depends_on:
@@ -64,10 +73,23 @@ services:
     networks:
       - book-library-network-dev
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app:delegated
       - /app/node_modules
     stdin_open: true
     tty: true
+    command: >
+      sh -c "
+        if [ ! -f package.json ]; then
+          echo 'No package.json found. Creating React app...' &&
+          npm create vite@latest . -- --template react-ts --force &&
+          npm install
+        else
+          echo 'Installing dependencies...' &&
+          npm install
+        fi &&
+        echo 'Starting development server...' &&
+        npm run dev -- --host 0.0.0.0 --port 3000
+      "
 
 networks:
   book-library-network-dev:
