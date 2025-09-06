@@ -1,0 +1,293 @@
+# =========================
+# Default Behavior
+# =========================
+
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# =========================
+# C# / .NET Files
+# =========================
+
+## Source code
+*.cs            text diff=csharp
+*.csx           text diff=csharp
+*.vb            text
+*.fs            text
+*.fsi           text
+*.fsx           text
+
+## Project files
+*.csproj        text eol=crlf merge=union
+*.vbproj        text eol=crlf merge=union
+*.fsproj        text eol=crlf merge=union
+*.dbproj        text eol=crlf merge=union
+*.sln           text eol=crlf merge=union
+*.sqlproj       text eol=crlf merge=union
+*.wwaproj       text eol=crlf merge=union
+*.xproj         text eol=crlf merge=union
+*.props         text eol=crlf
+*.filters       text eol=crlf
+*.vcxproj       text eol=crlf
+
+## Configuration files
+*.json          text
+*.xml           text
+*.config        text eol=crlf
+*.runsettings   text eol=crlf
+app.config      text eol=crlf
+web.config      text eol=crlf
+packages.config text eol=crlf
+nuget.config    text eol=crlf
+
+## .NET Core
+*.deps.json     text eol=lf
+*.runtimeconfig.json text eol=lf
+global.json     text eol=lf
+
+# =========================
+# Web / Frontend Files
+# =========================
+
+## HTML/CSS
+*.html          text diff=html
+*.htm           text diff=html
+*.css           text diff=css
+*.scss          text diff=css
+*.sass          text
+*.less          text
+
+## JavaScript/TypeScript
+*.js            text
+*.jsx           text
+*.ts            text diff=typescript
+*.tsx           text diff=typescript
+*.mjs           text
+*.cjs           text
+*.coffee        text
+*.map           text -diff
+
+## React/Vite specific
+*.config.js     text eol=lf
+*.config.ts     text eol=lf
+*.config.mjs    text eol=lf
+vite.config.ts  text eol=lf
+vite.config.js  text eol=lf
+tsconfig.json   text eol=lf
+tsconfig.*.json text eol=lf
+.eslintrc       text eol=lf
+.eslintrc.json  text eol=lf
+.prettierrc     text eol=lf
+.babelrc        text eol=lf
+
+## Package files
+package.json    text eol=lf
+package-lock.json text eol=lf -diff
+yarn.lock       text eol=lf -diff
+pnpm-lock.yaml  text eol=lf -diff
+.npmrc          text eol=lf
+.yarnrc         text eol=lf
+.pnpmfile.cjs   text eol=lf
+
+# =========================
+# Docker Files
+# =========================
+
+Dockerfile      text eol=lf
+Dockerfile.*    text eol=lf
+.dockerignore   text eol=lf
+docker-compose.yml      text eol=lf
+docker-compose.*.yml    text eol=lf
+*.dockerfile    text eol=lf
+
+# =========================
+# SQL / Database Files
+# =========================
+
+*.sql           text
+*.SQL           text
+*.pls           text
+*.plsql         text
+
+# =========================
+# Documentation
+# =========================
+
+*.md            text diff=markdown
+*.MD            text diff=markdown
+*.mdx           text diff=markdown
+*.markdown      text diff=markdown
+README*         text
+readme*         text
+LICENSE*        text
+license*        text
+AUTHORS         text
+CONTRIBUTORS    text
+CHANGELOG*      text
+HISTORY*        text
+NEWS*           text
+TODO*           text
+
+## Documentation
+*.adoc          text
+*.textile       text
+*.mustache      text
+*.csv           text
+*.tab           text
+*.tsv           text
+*.rst           text
+*.txt           text
+*.tex           text diff=tex
+
+# =========================
+# Configuration Files
+# =========================
+
+## Git
+.gitignore      text eol=lf
+.gitattributes  text eol=lf
+.gitconfig      text eol=lf
+.gitmodules     text eol=lf
+
+## CI/CD
+*.yml           text eol=lf
+*.yaml          text eol=lf
+.travis.yml     text eol=lf
+appveyor.yml    text eol=lf
+azure-pipelines.yml text eol=lf
+
+## Editor configs
+.editorconfig   text eol=lf
+*.editorconfig  text eol=lf
+
+## Environment
+.env            text eol=lf
+.env.*          text eol=lf
+*.env           text eol=lf
+
+## Other configs
+Makefile        text eol=lf
+makefile        text eol=lf
+*.mk            text eol=lf
+*.make          text eol=lf
+
+# =========================
+# Shell Scripts
+# =========================
+
+*.sh            text eol=lf
+*.bash          text eol=lf
+*.zsh           text eol=lf
+*.fish          text eol=lf
+*.ps1           text eol=crlf
+*.psm1          text eol=crlf
+*.psd1          text eol=crlf
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+
+# =========================
+# Binary Files
+# =========================
+
+## Images
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.bmp           binary
+*.ico           binary
+*.svg           text
+*.svgz          binary
+*.webp          binary
+*.tif           binary
+*.tiff          binary
+*.eps           binary
+
+## Fonts
+*.ttf           binary
+*.eot           binary
+*.otf           binary
+*.woff          binary
+*.woff2         binary
+
+## Documents
+*.pdf           binary
+*.PDF           binary
+*.doc           binary
+*.DOC           binary
+*.docx          binary
+*.DOCX          binary
+*.xls           binary
+*.xlsx          binary
+*.ppt           binary
+*.pptx          binary
+
+## Archives
+*.7z            binary
+*.br            binary
+*.gz            binary
+*.tar           binary
+*.tgz           binary
+*.zip           binary
+*.ZIP           binary
+*.rar           binary
+
+## Executables
+*.exe           binary
+*.EXE           binary
+*.dll           binary
+*.DLL           binary
+*.so            binary
+*.dylib         binary
+
+## Media
+*.mp3           binary
+*.mp4           binary
+*.mov           binary
+*.avi           binary
+*.webm          binary
+*.ogg           binary
+*.wav           binary
+*.flac          binary
+
+## .NET specific binaries
+*.snk           binary
+*.pfx           binary
+*.nupkg         binary
+*.snupkg        binary
+
+## Database
+*.db            binary
+*.sqlite        binary
+*.sqlite3       binary
+*.mdf           binary
+*.ldf           binary
+*.ndf           binary
+
+# =========================
+# Special Handling
+# =========================
+
+## Prevent merge conflicts in generated files
+package-lock.json merge=ours
+yarn.lock       merge=ours
+pnpm-lock.yaml  merge=ours
+*.Designer.cs   merge=ours
+*.generated.cs  merge=ours
+*.Designer.vb   merge=ours
+
+## Handle line endings in specific paths
+/scripts/*.sh   text eol=lf
+/scripts/*.ps1  text eol=crlf
+
+## Linguist overrides (for GitHub language detection)
+*.cshtml        linguist-language=C#
+*.razor         linguist-language=C#
+*.fs            linguist-language=F#
+*.fsx           linguist-language=F#
+*.vue           linguist-language=Vue
+*.tsx           linguist-language=TypeScript
+*.tf            linguist-language=HCL
+*.tfvars        linguist-language=HCL
+*.bicep         linguist-language=Bicep
+Dockerfile*     linguist-language=Dockerfile
