@@ -1,0 +1,62 @@
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: book-library-db-prod
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${DB_PASSWORD:-YourStrong@Password123}
+      - MSSQL_PID=Express
+    volumes:
+      - sqlserver_data_prod:/var/opt/mssql
+    networks:
+      - book-library-network-prod
+    restart: unless-stopped
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "${DB_PASSWORD:-YourStrong@Password123}" -Q "SELECT 1" -b -o /dev/null
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: book-library-api-prod
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Database=BookLibraryDb;User Id=sa;Password=${DB_PASSWORD:-YourStrong@Password123};TrustServerCertificate=True
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - book-library-network-prod
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: book-library-frontend-prod
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - book-library-network-prod
+    restart: unless-stopped
+
+networks:
+  book-library-network-prod:
+    driver: bridge
+
+volumes:
+  sqlserver_data_prod:
+    driver: local

@@ -1,0 +1,14 @@
+# frontend/.dockerignore
+node_modules
+npm-debug.log
+.dockerignore
+.git
+.gitignore
+README.md
+.env
+.editorconfig
+.vscode
+coverage
+.nyc_output
+dist
+build
