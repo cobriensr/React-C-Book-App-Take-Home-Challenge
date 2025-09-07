@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import { BookList } from './BookList/BookList';
 import { BookForm } from './BookForm/BookForm';
 import { StatsView } from './StatsView/StatsView';
+import { FavoritesList } from './Favorites/FavoritesList';
+import { AdvancedStatsView } from './Analytics/AdvancedStatsView';
 import type { Book } from '../types/book';
 
 export const Dashboard: React.FC = () => {
@@ -38,11 +40,17 @@ export const Dashboard: React.FC = () => {
           <NavLink to="/dashboard/books" className={({ isActive }) => isActive ? 'active' : ''}>
             Book List
           </NavLink>
+          <NavLink to="/dashboard/favorites" className={({ isActive }) => isActive ? 'active' : ''}>
+            ❤️ Favorites
+          </NavLink>
           <NavLink to="/dashboard/add" className={({ isActive }) => isActive ? 'active' : ''}>
             Add Book
           </NavLink>
           <NavLink to="/dashboard/stats" className={({ isActive }) => isActive ? 'active' : ''}>
             Statistics
+          </NavLink>
+          <NavLink to="/dashboard/analytics" className={({ isActive }) => isActive ? 'active' : ''}>
+            📊 Analytics
           </NavLink>
         </nav>
       </header>
@@ -50,6 +58,7 @@ export const Dashboard: React.FC = () => {
       <main className="app-main">
         <Routes>
           <Route path="books" element={<BookList onEditBook={handleEditBook} />} />
+          <Route path="favorites" element={<FavoritesList />} />
           <Route
             path="add"
             element={
@@ -61,6 +70,7 @@ export const Dashboard: React.FC = () => {
             }
           />
           <Route path="stats" element={<StatsView />} />
+          <Route path="analytics" element={<AdvancedStatsView />} />
           <Route path="/" element={<Navigate to="books" replace />} />
         </Routes>
       </main>
