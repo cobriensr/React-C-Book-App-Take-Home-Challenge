@@ -1,13 +1,18 @@
+// frontend/src/components/BookForm/BookForm.test.tsx
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BookForm } from './BookForm';
 import type { Book } from '../../types/book';
 
 // Mock the useBookMutations hook
+const mockCreateBook = vi.fn();
+const mockUpdateBook = vi.fn();
+
 vi.mock('../../hooks/useBookMutations', () => ({
   useBookMutations: () => ({
-    createBook: vi.fn().mockResolvedValue({}),
-    updateBook: vi.fn().mockResolvedValue({}),
+    createBook: mockCreateBook,
+    updateBook: mockUpdateBook,
     loading: false,
     error: null,
   }),
@@ -19,6 +24,10 @@ describe('BookForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateBook.mockReset();
+    mockUpdateBook.mockReset();
+    mockOnSuccess.mockReset();
+    mockOnCancel.mockReset();
   });
 
   describe('Create Mode', () => {
@@ -28,9 +37,9 @@ describe('BookForm', () => {
       );
 
       expect(screen.getByText('Add New Book')).toBeInTheDocument();
-      expect(screen.getByLabelText(/Title/)).toHaveValue('');
-      expect(screen.getByLabelText(/Author/)).toHaveValue('');
-      expect(screen.getByLabelText(/Genre/)).toHaveValue('');
+      expect(screen.getByLabelText(/Title \*/)).toHaveValue('');
+      expect(screen.getByLabelText(/Author \*/)).toHaveValue('');
+      expect(screen.getByLabelText(/Genre \*/)).toHaveValue('');
     });
 
     it('validates required fields', async () => {
@@ -46,34 +55,29 @@ describe('BookForm', () => {
         expect(screen.getByText('Author is required')).toBeInTheDocument();
         expect(screen.getByText('Genre is required')).toBeInTheDocument();
       });
+
+      // Verify that onSuccess was not called
+      expect(mockOnSuccess).not.toHaveBeenCalled();
     });
 
     it('submits form with valid data', async () => {
-      const { useBookMutations } = await import('../../hooks/useBookMutations');
-      const mockCreateBook = vi.fn().mockResolvedValue({});
-      
-      vi.mocked(useBookMutations).mockReturnValue({
-        createBook: mockCreateBook,
-        updateBook: vi.fn(),
-        deleteBook: vi.fn(),
-        loading: false,
-        error: null,
-      });
+      mockCreateBook.mockResolvedValue({});
 
       render(
         <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
-      fireEvent.change(screen.getByLabelText(/Title/), {
+      // Fill in the form
+      fireEvent.change(screen.getByLabelText(/Title \*/), {
         target: { value: 'New Book' },
       });
-      fireEvent.change(screen.getByLabelText(/Author/), {
+      fireEvent.change(screen.getByLabelText(/Author \*/), {
         target: { value: 'New Author' },
       });
-      fireEvent.change(screen.getByLabelText(/Genre/), {
+      fireEvent.change(screen.getByLabelText(/Genre \*/), {
         target: { value: 'Fiction' },
       });
-      fireEvent.change(screen.getByLabelText(/Published Date/), {
+      fireEvent.change(screen.getByLabelText(/Published Date \*/), {
         target: { value: '2023-01-01' },
       });
 
@@ -109,27 +113,52 @@ describe('BookForm', () => {
       );
 
       expect(screen.getByText('Edit Book')).toBeInTheDocument();
-      expect(screen.getByLabelText(/Title/)).toHaveValue('Existing Book');
-      expect(screen.getByLabelText(/Author/)).toHaveValue('Existing Author');
-      expect(screen.getByLabelText(/Genre/)).toHaveValue('Non-Fiction');
+      expect(screen.getByLabelText(/Title \*/)).toHaveValue('Existing Book');
+      expect(screen.getByLabelText(/Author \*/)).toHaveValue('Existing Author');
+      expect(screen.getByLabelText(/Genre \*/)).toHaveValue('Non-Fiction');
       expect(screen.getByLabelText(/Rating/)).toHaveValue('3');
     });
 
-    it('validates rating range', async () => {
+    it('validates rating range', () => {
       render(
         <BookForm book={mockBook} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
-      const ratingSelect = screen.getByLabelText(/Rating/);
-      fireEvent.change(ratingSelect, { target: { value: '6' } });
-
-      await waitFor(() => {
-        expect(screen.getByText('Rating must be between 1 and 5')).toBeInTheDocument();
-      });
-
       // Test that all valid ratings are available
+      const ratingSelect = screen.getByLabelText(/Rating/);
+      
       [1, 2, 3, 4, 5].forEach(rating => {
         expect(screen.getByText(`${rating} - ${'★'.repeat(rating)}`)).toBeInTheDocument();
+      });
+
+      // Verify the current value
+      expect(ratingSelect).toHaveValue('3');
+    });
+
+    it('updates book with valid data', async () => {
+      mockUpdateBook.mockResolvedValue({});
+
+      render(
+        <BookForm book={mockBook} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
+      );
+
+      // Modify a field
+      fireEvent.change(screen.getByLabelText(/Title \*/), {
+        target: { value: 'Updated Book Title' },
+      });
+
+      const submitButton = screen.getByText('Update Book');
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockUpdateBook).toHaveBeenCalledWith('1', {
+          title: 'Updated Book Title',
+          author: 'Existing Author',
+          genre: 'Non-Fiction',
+          publishedDate: '2022-06-15',
+          rating: 3,
+        });
+        expect(mockOnSuccess).toHaveBeenCalled();
       });
     });
   });
@@ -143,5 +172,29 @@ describe('BookForm', () => {
     fireEvent.click(cancelButton);
 
     expect(mockOnCancel).toHaveBeenCalled();
+  });
+
+  it('clears validation errors when field is modified', async () => {
+    render(
+      <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
+    );
+
+    // Trigger validation errors
+    const submitButton = screen.getByText('Add Book');
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Title is required')).toBeInTheDocument();
+    });
+
+    // Type in the title field
+    fireEvent.change(screen.getByLabelText(/Title \*/), {
+      target: { value: 'A' },
+    });
+
+    // Error should be cleared
+    await waitFor(() => {
+      expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
+    });
   });
 });

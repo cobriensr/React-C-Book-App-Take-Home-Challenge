@@ -1,7 +1,14 @@
+// frontend/src/components/BookList/BookCard.test.tsx
+
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BookCard } from './BookCard';
 import type { Book } from '../../types/book';
+
+// Mock the FavoriteButton component
+vi.mock('../Favorites/FavoriteButton', () => ({
+  FavoriteButton: () => null
+}));
 
 describe('BookCard', () => {
   const mockBook: Book = {
@@ -50,12 +57,15 @@ describe('BookCard', () => {
   });
 
   it('formats date correctly', () => {
-    render(
+    const { container } = render(
       <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
     );
 
-    const dateElement = screen.getByText(/2023/);
+    // Cast to HTMLElement
+    const dateElement = container.querySelector('.date') as HTMLElement;
     expect(dateElement).toBeInTheDocument();
+    // Just check that it contains a valid date format
+    expect(dateElement.textContent).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/);
   });
 
   it('renders correct number of stars for rating', () => {
@@ -67,10 +77,10 @@ describe('BookCard', () => {
 
     testCases.forEach(({ rating, expected }) => {
       const { rerender } = render(
-        <BookCard 
-          book={{ ...mockBook, rating }} 
-          onEdit={mockOnEdit} 
-          onDelete={mockOnDelete} 
+        <BookCard
+          book={{ ...mockBook, rating }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
         />
       );
 

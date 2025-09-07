@@ -1,3 +1,5 @@
+// frontend/src/components/BookList/BookCard.tsx
+
 import React from 'react';
 import type { BookCardProps } from '../../types/book';
 import { FavoriteButton } from '../Favorites/FavoriteButton';

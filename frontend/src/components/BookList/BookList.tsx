@@ -1,3 +1,5 @@
+// frontend/src/components/BookList/BookList.tsx
+
 import React, { useState, useMemo } from 'react';
 import { useBooks } from '../../hooks/useBooks';
 import { useBookMutations } from '../../hooks/useBookMutations';
