@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Container Apps Architecture</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .diagram-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #0078D4;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #0078D4;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .legend-line {
+            width: 30px;
+            height: 2px;
+            margin-right: 10px;
+        }
+        .user-flow { background-color: #0078D4; }
+        .api-flow { background-color: #107C10; }
+        .monitoring-flow { background-color: #FF8C00; border-style: dashed; }
+        .cicd-flow { background-color: #6B69D6; }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <h1 style="text-align: center; color: #0078D4; margin-bottom: 30px;">Azure Container Apps Architecture</h1>
+        
+        <svg width="1000" height="600" viewBox="0 0 1000 600">
+            <!-- Background Azure Cloud -->
+            <rect x="250" y="80" width="500" height="380" rx="15" fill="#E6F3FF" stroke="#0078D4" stroke-width="2" stroke-dasharray="5,5"/>
+            <text x="500" y="105" text-anchor="middle" fill="#0078D4" font-size="18" font-weight="bold">Azure Cloud</text>
+            
+            <!-- User/Browser -->
+            <rect x="30" y="180" width="80" height="60" rx="8" fill="#4CAF50" stroke="#388E3C" stroke-width="2"/>
+            <text x="70" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">User</text>
+            <text x="70" y="220" text-anchor="middle" fill="white" font-size="10">Browser</text>
+            
+            <!-- GitHub -->
+            <rect x="30" y="80" width="80" height="60" rx="8" fill="#333" stroke="#666" stroke-width="2"/>
+            <text x="70" y="105" text-anchor="middle" fill="white" font-size="12" font-weight="bold">GitHub</text>
+            <text x="70" y="120" text-anchor="middle" fill="white" font-size="10">Repository</text>
+            
+            <!-- Container Apps Section -->
+            <rect x="280" y="140" width="440" height="180" rx="10" fill="#F0F8FF" stroke="#0078D4" stroke-width="1"/>
+            <text x="500" y="135" text-anchor="middle" fill="#0078D4" font-size="14" font-weight="bold">Azure Container Apps</text>
+            
+            <!-- Frontend Container -->
+            <rect x="300" y="160" width="180" height="120" rx="8" fill="#61DAFB" stroke="#0078D4" stroke-width="2"/>
+            <text x="390" y="180" text-anchor="middle" fill="#000" font-size="12" font-weight="bold">Frontend Container</text>
+            <text x="390" y="200" text-anchor="middle" fill="#000" font-size="10">React + Vite + TypeScript</text>
+            <text x="390" y="220" text-anchor="middle" fill="#666" font-size="8">myapp-ui.region.</text>
+            <text x="390" y="235" text-anchor="middle" fill="#666" font-size="8">azurecontainerapps.io</text>
+            <text x="390" y="255" text-anchor="middle" fill="#000" font-size="10">🐳 Docker</text>
+            
+            <!-- Backend Container -->
+            <rect x="520" y="160" width="180" height="120" rx="8" fill="#512BD4" stroke="#0078D4" stroke-width="2"/>
+            <text x="610" y="180" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Backend Container</text>
+            <text x="610" y="200" text-anchor="middle" fill="white" font-size="10">.NET 9 Web API</text>
+            <text x="610" y="220" text-anchor="middle" fill="#E6F3FF" font-size="8">myapp-api.region.</text>
+            <text x="610" y="235" text-anchor="middle" fill="#E6F3FF" font-size="8">azurecontainerapps.io</text>
+            <text x="610" y="255" text-anchor="middle" fill="white" font-size="10">🐳 Docker</text>
+            
+            <!-- Azure SQL Database -->
+            <ellipse cx="500" cy="380" rx="120" ry="40" fill="#FF6B35" stroke="#E55100" stroke-width="2"/>
+            <text x="500" y="375" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Azure SQL Database</text>
+            <text x="500" y="390" text-anchor="middle" fill="white" font-size="10">SQL Server + EF Core</text>
+            <text x="500" y="405" text-anchor="middle" fill="#FFE0CC" font-size="8">Serverless Tier</text>
+            
+            <!-- Application Insights -->
+            <rect x="820" y="180" width="140" height="80" rx="8" fill="#FF8C00" stroke="#F57C00" stroke-width="2"/>
+            <text x="890" y="205" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Application</text>
+            <text x="890" y="220" text-anchor="middle" fill="white" font-size="12" font-weight="bold">Insights</text>
+            <text x="890" y="240" text-anchor="middle" fill="#FFE0CC" font-size="10">Monitoring & Telemetry</text>
+            
+            <!-- Log Analytics -->
+            <rect x="820" y="280" width="140" height="60" rx="8" fill="#FFA726" stroke="#FB8C00" stroke-width="2"/>
+            <text x="890" y="305" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Log Analytics</text>
+            <text x="890" y="320" text-anchor="middle" fill="white" font-size="9">Workspace</text>
+            <text x="890" y="335" text-anchor="middle" fill="#FFE0CC" font-size="8">(Auto-created)</text>
+            
+            <!-- Arrows -->
+            
+            <!-- User to Frontend -->
+            <path d="M 110 210 Q 180 210 280 220" stroke="#0078D4" stroke-width="3" fill="none" marker-end="url(#arrowhead-blue)"/>
+            <text x="195" y="205" fill="#0078D4" font-size="10">HTTPS</text>
+            
+            <!-- Frontend to Backend -->
+            <path d="M 480 220 L 520 220" stroke="#107C10" stroke-width="3" fill="none" marker-end="url(#arrowhead-green)"/>
+            <text x="485" y="210" fill="#107C10" font-size="9">API</text>
+            
+            <!-- Backend to Database -->
+            <path d="M 610 280 L 540 340" stroke="#107C10" stroke-width="3" fill="none" marker-end="url(#arrowhead-green)"/>
+            <text x="580" y="310" fill="#107C10" font-size="9">EF Core</text>
+            
+            <!-- GitHub to Container Apps -->
+            <path d="M 110 110 Q 180 110 280 140" stroke="#6B69D6" stroke-width="3" fill="none" marker-end="url(#arrowhead-purple)"/>
+            <text x="195" y="105" fill="#6B69D6" font-size="10">CI/CD</text>
+            
+            <!-- Monitoring flows -->
+            <path d="M 480 200 Q 650 200 820 210" stroke="#FF8C00" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arrowhead-orange)"/>
+            <path d="M 700 240 Q 760 240 820 230" stroke="#FF8C00" stroke-width="2" stroke-dasharray="5,5" fill="none" marker-end="url(#arrowhead-orange)"/>
+            
+            <!-- App Insights to Log Analytics -->
+            <path d="M 890 260 L 890 280" stroke="#FF8C00" stroke-width="2" fill="none" marker-end="url(#arrowhead-orange)"/>
+            
+            <!-- Arrow markers -->
+            <defs>
+                <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#0078D4"/>
+                </marker>
+                <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#107C10"/>
+                </marker>
+                <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#FF8C00"/>
+                </marker>
+                <marker id="arrowhead-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B69D6"/>
+                </marker>
+            </defs>
+            
+            <!-- Technology stack info -->
+            <rect x="280" y="480" width="440" height="80" rx="8" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="1"/>
+            <text x="500" y="500" text-anchor="middle" fill="#495057" font-size="14" font-weight="bold">Technology Stack</text>
+            <text x="350" y="520" fill="#495057" font-size="11">• Frontend: React, Vite, TypeScript, Docker</text>
+            <text x="350" y="535" fill="#495057" font-size="11">• Backend: .NET 9, EF Core, Docker</text>
+            <text x="350" y="550" fill="#495057" font-size="11">• Database: Azure SQL Server (Serverless)</text>
+        </svg>
+        
+        <div class="legend">
+            <h3>Connection Types</h3>
+            <div class="legend-item">
+                <div class="legend-line user-flow"></div>
+                <span>User Traffic (HTTPS)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line api-flow"></div>
+                <span>Internal API & Database Calls</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line monitoring-flow"></div>
+                <span>Monitoring & Telemetry</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line cicd-flow"></div>
+                <span>CI/CD Deployment</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
