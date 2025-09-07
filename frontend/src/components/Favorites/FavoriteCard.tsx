@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import type { Favorite } from '../../types/book';
 import { useFavorites } from '../../hooks/useFavorites';
-
-interface FavoriteCardProps {
-  favorite: Favorite;
-  onRemove: () => void;
-}
+import type { FavoriteCardProps } from '../../types/favorite';
 
 export const FavoriteCard: React.FC<FavoriteCardProps> = ({ favorite, onRemove }) => {
   const { toggleFavorite, updateNotes } = useFavorites();

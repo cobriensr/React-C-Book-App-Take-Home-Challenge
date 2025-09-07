@@ -12,20 +12,6 @@ export interface Book {
   totalRatings?: number;
 }
 
-export interface Favorite {
-  id: string;
-  userId: string;
-  bookId: string;
-  createdAt: string;
-  notes?: string;
-  book?: Book;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
 export interface ReadingHistoryEntry {
   id: string;
   userId: string;
@@ -88,4 +74,30 @@ export interface BookCardProps {
   onEdit: (book: Book) => void;
   onDelete: (id: string) => void;
   showFavoriteButton?: boolean;
+}
+
+export interface BookFormData {
+  title: string;
+  author: string;
+  genre: string;
+  publishedDate: string;
+  rating: number;
+}
+
+export interface BookFormProps {
+  book?: Book | null;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+export interface BookStats {
+  totalBooks: number;
+  averageRating: number;
+  booksByGenre: Record<string, number>;
+  booksByRating: Record<number, number>;
+}
+
+export interface ApiError {
+  message: string;
+  status?: number;
 }

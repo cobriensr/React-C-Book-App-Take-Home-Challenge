@@ -67,7 +67,7 @@ export const BookForm: React.FC<BookFormProps> = ({ book, onSuccess, onCancel })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: BookFormData) => ({
       ...prev,
       [name]: name === 'rating' ? parseInt(value) : value,
     }));

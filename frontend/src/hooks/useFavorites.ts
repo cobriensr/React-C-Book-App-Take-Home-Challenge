@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Favorite } from '../types/book';
+import type { Favorite } from '../types/favorite';
 import favoriteService from '../services/favoriteService';
 
 export const useFavorites = () => {
