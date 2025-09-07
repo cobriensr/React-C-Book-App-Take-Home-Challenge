@@ -35,47 +35,55 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Login to Book Library</h2>
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="john@example.com"
-            />
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <h1>📚</h1>
+            <h2>Login to Book Library</h2>
           </div>
+          
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="john@example.com"
+                autoComplete="email"
+              />
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter your password"
-            />
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <button type="submit" disabled={loading} className="auth-button">
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            <p>
+              Don't have an account? <Link to="/register">Register here</Link>
+            </p>
           </div>
-
-          {error && <div className="auth-error">{error}</div>}
-
-          <button type="submit" disabled={loading} className="auth-button">
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Don't have an account? <Link to="/register">Register here</Link>
-          </p>
         </div>
       </div>
     </div>
