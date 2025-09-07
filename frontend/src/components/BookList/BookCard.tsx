@@ -1,11 +1,5 @@
 import React from 'react';
-import type { Book } from '../../types/book';
-
-interface BookCardProps {
-  book: Book;
-  onEdit: (book: Book) => void;
-  onDelete: (id: string) => void;
-}
+import type { BookCardProps } from '../../types/book';
 
 export const BookCard: React.FC<BookCardProps> = ({ book, onEdit, onDelete }) => {
   const formatDate = (dateString: string) => {

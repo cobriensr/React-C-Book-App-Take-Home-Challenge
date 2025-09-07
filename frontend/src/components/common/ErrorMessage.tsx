@@ -1,9 +1,5 @@
 import React from 'react';
-
-interface ErrorMessageProps {
-  message: string;
-  onRetry?: () => void;
-}
+import type { ErrorMessageProps } from '../../types/common';
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, onRetry }) => (
   <div className="error-message">

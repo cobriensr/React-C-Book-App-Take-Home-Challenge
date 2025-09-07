@@ -26,3 +26,19 @@ export interface ApiError {
   message: string;
   status?: number;
 }
+
+export interface BookFormProps {
+  book?: Book | null;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+export interface BookCardProps {
+  book: Book;
+  onEdit: (book: Book) => void;
+  onDelete: (id: string) => void;
+}
+
+export interface BookListProps {
+  onEditBook: (book: Book) => void;
+}

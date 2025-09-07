@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { Book, BookFormData } from '../../types/book';
+import type { BookFormData, BookFormProps } from '../../types/book';
 import { useBookMutations } from '../../hooks/useBookMutations';
-
-interface BookFormProps {
-  book?: Book | null;
-  onSuccess: () => void;
-  onCancel: () => void;
-}
 
 export const BookForm: React.FC<BookFormProps> = ({ book, onSuccess, onCancel }) => {
   const { createBook, updateBook, loading, error } = useBookMutations();
