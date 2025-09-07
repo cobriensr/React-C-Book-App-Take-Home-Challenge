@@ -1,7 +1,7 @@
-# docker-compose.dev.yml - Optimized for Apple Silicon Macs
+# docker-compose.dev.yml - Fixed for M1/M2/M3 Macs
 
 services:
-  # Azure SQL Edge - ARM64 compatible SQL database
+  # Azure SQL Edge - Without volume mount to avoid permission issues
   db:
     image: mcr.microsoft.com/azure-sql-edge:latest
     container_name: book-library-db-dev
@@ -11,20 +11,12 @@ services:
       - MSSQL_PID=Developer
     ports:
       - "1433:1433"
-    volumes:
-      - sqlserver_data_dev:/var/opt/mssql
     networks:
       - book-library-network-dev
-    cap_add:
-      - SYS_PTRACE
-    healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong@Password123" -Q "SELECT 1" || exit 1
-      interval: 10s
-      timeout: 3s
-      retries: 10
-      start_period: 10s
-
-  # .NET Backend API - Run with SDK for development
+    # Remove volume mount to avoid permission issues
+    # Data will be stored inside the container
+    
+  # Backend - simplified startup
   backend:
     image: mcr.microsoft.com/dotnet/sdk:9.0
     platform: linux/arm64
@@ -34,29 +26,30 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=db;Database=BookLibraryDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;Encrypt=False
-      - DOTNET_USE_POLLING_FILE_WATCHER=true
-      - DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=true
     ports:
       - "8080:8080"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - book-library-network-dev
     volumes:
       - ./backend:/app:delegated
-      - ~/.nuget/packages:/root/.nuget/packages:ro
     command: >
       sh -c "
         echo 'Waiting for database to be ready...' &&
-        sleep 10 &&
-        echo 'Running migrations...' &&
-        dotnet ef database update || true &&
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+          if dotnet ef database update 2>/dev/null; then
+            echo 'Database is ready and migrations applied!' &&
+            break
+          fi &&
+          echo 'Database not ready, waiting...' &&
+          sleep 5
+        done &&
         echo 'Starting application...' &&
-        dotnet watch run --no-restore --urls http://+:8080
+        dotnet watch run --urls http://+:8080
       "
 
-  # React Frontend - Only start if package.json exists
+  # Frontend - only if you have it set up
   frontend:
     image: node:20-alpine
     platform: linux/arm64
@@ -64,8 +57,6 @@ services:
     working_dir: /app
     environment:
       - VITE_API_URL=http://localhost:8080
-      - CHOKIDAR_USEPOLLING=true
-      - WDS_SOCKET_PORT=3000
     ports:
       - "3000:3000"
     depends_on:
@@ -74,27 +65,17 @@ services:
       - book-library-network-dev
     volumes:
       - ./frontend:/app:delegated
-      - /app/node_modules
-    stdin_open: true
-    tty: true
     command: >
       sh -c "
-        if [ ! -f package.json ]; then
-          echo 'No package.json found. Creating React app...' &&
-          npm create vite@latest . -- --template react-ts --force &&
-          npm install
+        if [ -f package.json ]; then
+          npm install &&
+          npm run dev -- --host 0.0.0.0 --port 3000
         else
-          echo 'Installing dependencies...' &&
-          npm install
-        fi &&
-        echo 'Starting development server...' &&
-        npm run dev -- --host 0.0.0.0 --port 3000
+          echo 'Frontend not set up yet. Skipping...' &&
+          tail -f /dev/null
+        fi
       "
 
 networks:
   book-library-network-dev:
     driver: bridge
-
-volumes:
-  sqlserver_data_dev:
-    driver: local
