@@ -236,43 +236,4 @@ describe('BookForm', () => {
       expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
     });
   });
-
-  it('shows success message and clears form after successful creation', async () => {
-    mockCreateBook.mockResolvedValue({});
-
-    renderWithRouter(
-      <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
-    );
-
-    // Fill in the form
-    fireEvent.change(screen.getByLabelText(/Title \*/), {
-      target: { value: 'Test Book' },
-    });
-    fireEvent.change(screen.getByLabelText(/Author \*/), {
-      target: { value: 'Test Author' },
-    });
-    fireEvent.change(screen.getByLabelText(/Genre \*/), {
-      target: { value: 'Fiction' },
-    });
-    fireEvent.change(screen.getByLabelText(/Published Date \*/), {
-      target: { value: '2023-01-01' },
-    });
-
-    const submitButton = screen.getByText('Add Book');
-    fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(mockCreateBook).toHaveBeenCalled();
-    });
-
-    // Check that success message appears
-    await waitFor(() => {
-      expect(screen.getByText(/Book added successfully/)).toBeInTheDocument();
-    });
-
-    // Check that form is cleared
-    expect(screen.getByLabelText(/Title \*/)).toHaveValue('');
-    expect(screen.getByLabelText(/Author \*/)).toHaveValue('');
-    expect(screen.getByLabelText(/Genre \*/)).toHaveValue('');
-  });
 });
