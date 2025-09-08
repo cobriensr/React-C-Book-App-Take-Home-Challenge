@@ -43,7 +43,7 @@ resource "azurerm_container_app" "backend" {
 
       env {
         name  = "ASPNETCORE_ENVIRONMENT"
-        value = var.environment
+        value = "production"
       }
 
       env {
@@ -155,7 +155,7 @@ resource "azurerm_container_app" "frontend" {
 
       env {
         name  = "NODE_ENV"
-        value = var.environment == "prod" ? "production" : "development"
+        value = "production"
       }
     }
 

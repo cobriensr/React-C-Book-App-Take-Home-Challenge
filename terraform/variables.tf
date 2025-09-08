@@ -33,11 +33,9 @@ variable "sql_admin_username" {
 variable "frontend_image" {
   description = "Frontend container image"
   type        = string
-  default     = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
 }
 
 variable "backend_image" {
   description = "Backend container image"
   type        = string
-  default     = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
 }

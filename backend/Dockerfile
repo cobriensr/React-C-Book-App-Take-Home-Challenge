@@ -4,7 +4,7 @@ WORKDIR /src
 # Copy csproj and restore dependencies
 COPY *.csproj ./
 RUN dotnet restore
-# Copy everything else and build
+# Copy everything else then build
 COPY . .
 RUN dotnet build -c Release -o /app/build
 
