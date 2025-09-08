@@ -9,6 +9,7 @@ Chart.register(...registerables);
 export const AuthorChart: React.FC<AuthorChartProps> = ({ authors }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartRef.current || !authors?.length) return;
@@ -21,108 +22,84 @@ export const AuthorChart: React.FC<AuthorChartProps> = ({ authors }) => {
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
 
-    const topAuthors = authors.slice(0, 5); // Reduced to 5 for better visibility
+    // Take only top 5 authors
+    const topAuthors = authors.slice(0, 5);
 
     chartInstance.current = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: topAuthors.map(a => {
-          // Truncate long author names
-          const name = a.author;
-          return name.length > 20 ? name.substring(0, 20) + '...' : name;
-        }),
+        labels: topAuthors.map(a => a.author),
         datasets: [
           {
-            label: 'Books Read',
+            label: 'Books',
             data: topAuthors.map(a => a.bookCount),
-            backgroundColor: '#667eea',
-            borderRadius: 4,
-          },
-          {
-            label: 'Avg Rating',
-            data: topAuthors.map(a => a.averageRating),
-            backgroundColor: '#48bb78',
-            yAxisID: 'y1',
-            borderRadius: 4,
-          },
+            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 1,
+          }
         ],
       },
       options: {
         indexAxis: 'y' as const,
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-          padding: {
-            left: 10,
-            right: 50, // Extra padding for the rating axis
-            top: 10,
-            bottom: 10
-          }
-        },
         plugins: {
           title: {
             display: true,
-            text: 'Top Authors',
-            padding: 20,
+            text: 'Top Authors by Book Count',
+            padding: {
+              top: 10,
+              bottom: 30
+            },
             font: {
-              size: 16
+              size: 14
             }
           },
           legend: {
-            display: true,
-            position: 'bottom' as const,
+            display: false
           },
           tooltip: {
             callbacks: {
-              label: function(context) {
-                if (context.dataset.label === 'Avg Rating') {
-                  return `${context.dataset.label}: ${context.parsed.x.toFixed(1)} ★`;
-                }
-                return `${context.dataset.label}: ${context.parsed.x}`;
+              afterLabel: function(context) {
+                const author = topAuthors[context.dataIndex];
+                return `Avg Rating: ${author.averageRating.toFixed(1)} ★`;
               }
             }
           }
         },
+        layout: {
+          padding: {
+            left: 20,
+            right: 20,
+            top: 0,
+            bottom: 0
+          }
+        },
         scales: {
           x: {
-            display: true,
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            },
             title: {
               display: true,
-              text: 'Books Read',
-            },
-            grid: {
-              display: true,
-              color: 'rgba(0, 0, 0, 0.05)'
+              text: 'Number of Books'
             }
           },
           y: {
             ticks: {
               autoSkip: false,
-              maxRotation: 0,
-              padding: 5,
-              font: {
-                size: 11
+              callback: function(_, index) {
+                const label = this.getLabelForValue(index as number);
+                // Truncate very long names
+                if (label && label.length > 25) {
+                  return label.substring(0, 22) + '...';
+                }
+                return label;
               }
-            },
-            grid: {
-              display: false
             }
-          },
-          y1: {
-            type: 'linear' as const,
-            display: true,
-            position: 'top' as const,
-            min: 0,
-            max: 5,
-            grid: {
-              drawOnChartArea: false,
-            },
-            title: {
-              display: true,
-              text: 'Average Rating',
-            },
-          },
-        },
+          }
+        }
       },
     });
 
@@ -134,7 +111,15 @@ export const AuthorChart: React.FC<AuthorChartProps> = ({ authors }) => {
   }, [authors]);
 
   return (
-    <div style={{ position: 'relative', height: '350px', width: '100%' }}>
+    <div 
+      ref={containerRef}
+      style={{ 
+        width: '100%', 
+        height: '300px',
+        position: 'relative',
+        padding: '10px'
+      }}
+    >
       <canvas ref={chartRef}></canvas>
     </div>
   );
