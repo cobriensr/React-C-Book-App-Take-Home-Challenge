@@ -2,13 +2,9 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
-import type { GenrePreference } from '../../types/book';
+import type { GenrePreferenceChartProps } from '../../types/common';
 
 Chart.register(...registerables);
-
-interface GenrePreferenceChartProps {
-  genres: GenrePreference[];
-}
 
 export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genres }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
@@ -25,12 +21,16 @@ export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genr
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
 
-    const topGenres = genres.slice(0, 8);
+    const topGenres = genres.slice(0, 6); // Reduced to 6 for better visibility
 
     chartInstance.current = new Chart(ctx, {
       type: 'radar',
       data: {
-        labels: topGenres.map(g => g.genre),
+        labels: topGenres.map(g => {
+          // Truncate long genre names for radar chart
+          const name = g.genre;
+          return name.length > 12 ? name.substring(0, 12) + '...' : name;
+        }),
         datasets: [
           {
             label: 'Books Read',
@@ -41,6 +41,8 @@ export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genr
             pointBorderColor: '#fff',
             pointHoverBackgroundColor: '#fff',
             pointHoverBorderColor: '#667eea',
+            pointRadius: 5,
+            pointHoverRadius: 7,
           },
           {
             label: 'Average Rating',
@@ -51,15 +53,30 @@ export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genr
             pointBorderColor: '#fff',
             pointHoverBackgroundColor: '#fff',
             pointHoverBorderColor: '#48bb78',
+            pointRadius: 5,
+            pointHoverRadius: 7,
           },
         ],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 20,
+            bottom: 20,
+            left: 20,
+            right: 20
+          }
+        },
         plugins: {
           title: {
             display: true,
             text: 'Genre Preferences',
+            padding: 20,
+            font: {
+              size: 16
+            }
           },
           tooltip: {
             callbacks: {
@@ -72,7 +89,13 @@ export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genr
             }
           },
           legend: {
-            position: 'bottom',
+            position: 'bottom' as const,
+            labels: {
+              padding: 15,
+              font: {
+                size: 12
+              }
+            }
           }
         },
         scales: {
@@ -80,12 +103,22 @@ export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genr
             beginAtZero: true,
             grid: {
               color: 'rgba(0, 0, 0, 0.1)',
+              circular: true
             },
             angleLines: {
               color: 'rgba(0, 0, 0, 0.1)',
             },
             ticks: {
               backdropColor: 'transparent',
+              font: {
+                size: 10
+              }
+            },
+            pointLabels: {
+              font: {
+                size: 11
+              },
+              padding: 10
             }
           },
         },
@@ -99,5 +132,9 @@ export const GenrePreferenceChart: React.FC<GenrePreferenceChartProps> = ({ genr
     };
   }, [genres]);
 
-  return <canvas ref={chartRef}></canvas>;
+  return (
+    <div style={{ position: 'relative', height: '350px', width: '100%' }}>
+      <canvas ref={chartRef}></canvas>
+    </div>
+  );
 };

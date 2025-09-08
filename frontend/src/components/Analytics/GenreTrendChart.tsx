@@ -2,13 +2,9 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
-import type { GenreTrend } from '../../types/book';
+import type { GenreTrendChartProps } from '../../types/common';
 
 Chart.register(...registerables);
-
-interface GenreTrendChartProps {
-  trends: GenreTrend[];
-}
 
 export const GenreTrendChart: React.FC<GenreTrendChartProps> = ({ trends }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);
@@ -24,6 +20,8 @@ export const GenreTrendChart: React.FC<GenreTrendChartProps> = ({ trends }) => {
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
 
+    // Since GenreTrend now represents individual genres, not monthly data,
+    // we'll create a different visualization
     const colors = [
       '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
       '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#9966FF',
@@ -129,5 +127,9 @@ export const GenreTrendChart: React.FC<GenreTrendChartProps> = ({ trends }) => {
     return `${hours}h ${mins}m`;
   }
 
-  return <canvas ref={chartRef}></canvas>;
+  return (
+    <div style={{ position: 'relative', height: '400px', width: '100%' }}>
+      <canvas ref={chartRef}></canvas>
+    </div>
+  );
 };

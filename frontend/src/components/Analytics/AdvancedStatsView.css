@@ -167,18 +167,21 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-height: 400px;
+  min-height: 450px;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Prevent content overflow */
 }
 
 .chart-container.full-width {
   grid-column: 1 / -1;
 }
 
+/* Ensure canvas elements don't overflow their containers */
 .chart-container canvas {
-  max-width: 100%;
+  max-width: 100% !important;
   height: auto !important;
+  display: block;
 }
 
 /* Top Lists Grid */

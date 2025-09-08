@@ -1,7 +1,7 @@
 // frontend/src/types/common.ts
 
 import type React from 'react';
-import type { AdvancedStats, RatingTrend, GenrePreference, AuthorStats, ReadingVelocity as VelocityType } from './book';
+import type { AdvancedStats, RatingTrend, GenrePreference, AuthorStats, ReadingVelocity as VelocityType, GenreTrend } from './book';
 
 export interface ErrorMessageProps {
   message: string;
@@ -46,4 +46,16 @@ export interface ReadingVelocityProps {
 export interface TopListsProps {
   favoriteGenres: GenrePreference[];
   topAuthors: AuthorStats[];
+}
+
+export interface AuthorChartProps {
+  authors: AuthorStats[];
+}
+
+export interface GenreTrendChartProps {
+  trends: GenreTrend[];
+}
+
+export interface GenrePreferenceChartProps {
+  genres: GenrePreference[];
 }
