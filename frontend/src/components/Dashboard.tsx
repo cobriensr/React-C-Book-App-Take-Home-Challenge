@@ -10,7 +10,7 @@ import { AdvancedStatsView } from './Analytics/AdvancedStatsView';
 import type { Book } from '../types/book';
 
 export const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -36,7 +36,6 @@ export const Dashboard: React.FC = () => {
         <div className="header-content">
           <h1>📚 Book Library Manager</h1>
           <div className="user-info">
-            <span>Welcome, {user?.username || user?.name || user?.email || 'User'}!</span>
             <button onClick={logout} className="logout-button">
               Logout
             </button>

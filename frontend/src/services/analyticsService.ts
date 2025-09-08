@@ -1,4 +1,5 @@
 // frontend/src/services/analyticsService.ts
+
 import type { AdvancedStats, RatingTrend, GenreTrend, ReadingHistoryEntry } from '../types/book';
 import authService from './authService';
 

@@ -78,20 +78,26 @@ namespace BookApi.Controllers
                         .Count(b => b.CreatedAt >= startOfMonth)
                 };
                 
-                // Rating trends (last 12 months)
+                // Rating trends (last 12 months) - Fixed to work in memory
                 var ratingTrends = userBooks
                     .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
-                    .Select(g => new RatingTrendDto
-                    {
-                        Date = new DateTime(g.Key.Year, g.Key.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-                        AverageRating = Math.Round(g.Average(b => b.Rating), 2),
+                    .Select(g => new {
+                        Year = g.Key.Year,
+                        Month = g.Key.Month,
+                        AverageRating = g.Average(b => b.Rating),
                         BookCount = g.Count()
+                    })
+                    .Select(data => new RatingTrendDto
+                    {
+                        Date = new DateTime(data.Year, data.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+                        AverageRating = Math.Round(data.AverageRating, 2),
+                        BookCount = data.BookCount
                     })
                     .OrderBy(rt => rt.Date)
                     .TakeLast(12)
                     .ToList();
                 
-                // Genre trends
+                // Genre trends - Already working in memory
                 var genreTrends = userBooks
                     .GroupBy(b => b.Genre)
                     .Select(g => new GenreTrendDto
@@ -228,18 +234,30 @@ namespace BookApi.Controllers
             {
                 var userId = GetCurrentUserId();
                 
-                var trends = await _context.Books
+                // First, get the data from the database
+                var booksData = await _context.Books
                     .Where(b => b.UserId == userId && !b.IsDeleted)
                     .Where(b => b.CreatedAt >= DateTime.UtcNow.AddMonths(-months))
                     .GroupBy(b => new { b.CreatedAt.Year, b.CreatedAt.Month })
-                    .Select(g => new RatingTrendDto
+                    .Select(g => new 
                     {
-                        Date = new DateTime(g.Key.Year, g.Key.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-                        AverageRating = Math.Round(g.Average(b => b.Rating), 2),
+                        Year = g.Key.Year,
+                        Month = g.Key.Month,
+                        AverageRating = g.Average(b => b.Rating),
                         BookCount = g.Count()
                     })
-                    .OrderBy(rt => rt.Date)
                     .ToListAsync();
+                
+                // Then transform it in memory
+                var trends = booksData
+                    .Select(data => new RatingTrendDto
+                    {
+                        Date = new DateTime(data.Year, data.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+                        AverageRating = Math.Round(data.AverageRating, 2),
+                        BookCount = data.BookCount
+                    })
+                    .OrderBy(rt => rt.Date)
+                    .ToList();
                 
                 return Ok(trends);
             }
@@ -273,6 +291,7 @@ namespace BookApi.Controllers
                 
                 var totalBooks = books.Count;
                 
+                // This is already done in memory, so it's fine
                 var trends = books
                     .GroupBy(b => b.Genre)
                     .Select(g => new GenreTrendDto
