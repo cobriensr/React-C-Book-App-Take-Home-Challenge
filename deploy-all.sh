@@ -7,6 +7,7 @@ FRONTEND_URL="https://book-app-ui.wittydesert-f0d21091.centralus.azurecontainera
 echo "Deploying Backend..."
 docker buildx build \
   --platform linux/amd64 \
+  --no-cache \
   --tag acrbookapp.azurecr.io/backend:latest \
   --push \
   ./backend
@@ -25,6 +26,7 @@ echo "Using Backend API URL: ${BACKEND_URL}/api"
 docker buildx build \
   --platform linux/amd64 \
   --target production \
+  --no-cache \
   --build-arg VITE_API_URL=${BACKEND_URL}/api \
   --tag acrbookapp.azurecr.io/frontend:latest \
   --push \

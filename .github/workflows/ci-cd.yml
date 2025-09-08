@@ -65,16 +65,18 @@ jobs:
           echo "Building backend image..."
           docker buildx build \
             --platform linux/amd64 \
+            --no-cache \
             --tag acrbookapp.azurecr.io/backend:latest \
             --push \
             ./backend
           
           # Frontend with stable backend URL
-          echo "Building frontend image with API URL: ${{ env.BACKEND_URL }}/api"
+          echo "Building frontend image with API URL: ${{ secrets.BACKEND_URL }}/api"
           docker buildx build \
             --platform linux/amd64 \
+            --no-cache \
             --target production \
-            --build-arg VITE_API_URL=${{ env.BACKEND_URL }}/api \
+            --build-arg VITE_API_URL=${{ secrets.BACKEND_URL }}/api \
             --tag acrbookapp.azurecr.io/frontend:latest \
             --push \
             ./frontend
@@ -104,14 +106,14 @@ jobs:
         run: |
           echo "========================================="
           echo "Deployment Complete!"
-          echo "Backend URL: ${{ env.BACKEND_URL }}"
-          echo "Frontend URL: ${{ env.FRONTEND_URL }}"
+          echo "Backend URL: ${{ secrets.BACKEND_URL }}"
+          echo "Frontend URL: ${{ secrets.FRONTEND_URL }}"
           echo "========================================="
           
           # Test backend health endpoint
           echo "Testing backend health..."
-          curl -f ${{ env.BACKEND_URL }}/health || echo "Backend health check failed"
+          curl -f ${{ secrets.BACKEND_URL }}/health || echo "Backend health check failed"
           
           # Test frontend
           echo "Testing frontend..."
-          curl -f ${{ env.FRONTEND_URL }} || echo "Frontend check failed"
+          curl -f ${{ secrets.FRONTEND_URL }} || echo "Frontend check failed"
