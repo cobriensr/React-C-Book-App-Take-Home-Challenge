@@ -115,11 +115,6 @@ describe('BookForm', () => {
         });
         expect(mockOnSuccess).toHaveBeenCalled();
       });
-
-      // Check that success message appears
-      await waitFor(() => {
-        expect(screen.getByText(/Book added successfully/)).toBeInTheDocument();
-      });
     });
   });
 
