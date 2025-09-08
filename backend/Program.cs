@@ -10,6 +10,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add console logging for better debugging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -88,89 +93,167 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
     
-    options.AddPolicy("Production", policy =>
-    {
-        policy.WithOrigins(builder.Configuration["Cors:AllowedOrigins"]?.Split(',') ?? new[] { "*" })
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
+    // Removed Production policy as it's not being used and causes conflicts
+    // For production, you would specify actual origins like:
+    // policy.WithOrigins("https://your-frontend.com")
 });
 
 // Add Health Checks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<BookApiContext>();
 
+// Configure URLs explicitly for Azure Container Apps
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(80);
+});
+
 var app = builder.Build();
+
+// Log startup information
+app.Logger.LogInformation("Book API is starting up...");
+app.Logger.LogInformation($"Environment: {app.Environment.EnvironmentName}");
+app.Logger.LogInformation($"Content Root: {builder.Environment.ContentRootPath}");
 
 // Configure the HTTP request pipeline
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Book API V1");
+    c.RoutePrefix = "swagger";
+});
+
+// Important: Use routing before CORS
+app.UseRouting();
+
+// Apply CORS
 app.UseCors("AllowAll");
 
-app.UseHttpsRedirection();
+// Add OPTIONS handling for preflight requests
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Append("Access-Control-Allow-Headers", "*");
+        context.Response.Headers.Append("Access-Control-Allow-Methods", "*");
+        context.Response.StatusCode = 200;
+        await context.Response.CompleteAsync();
+        return;
+    }
+    await next.Invoke();
+});
+
+// Don't use HTTPS redirection in container (handled by Azure Container Apps)
+// app.UseHttpsRedirection();
 
 // Add authentication before authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add a root endpoint to prevent Azure default page
+app.MapGet("/", () => Results.Ok(new 
+{ 
+    message = "Book API is running",
+    version = "v1",
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    endpoints = new 
+    {
+        swagger = "/swagger",
+        health = "/health",
+        auth = new[] 
+        {
+            "POST /api/auth/register",
+            "POST /api/auth/login",
+            "GET /api/auth/verify"
+        }
+    }
+})).AllowAnonymous();
+
+// Map controllers - this is critical for your API endpoints to work
 app.MapControllers();
 
 // Map health check endpoint
 app.MapHealthChecks("/health");
 
+// Add fallback for unmatched routes (returns JSON instead of HTML)
+app.MapFallback(() => Results.NotFound(new 
+{ 
+    error = "Endpoint not found",
+    message = "The requested endpoint does not exist. Check /swagger for available endpoints.",
+    timestamp = DateTime.UtcNow
+}));
+
+// Log available endpoints
+app.Logger.LogInformation("Configured endpoints:");
+app.Logger.LogInformation("- GET /");
+app.Logger.LogInformation("- GET /health");
+app.Logger.LogInformation("- GET /swagger");
+app.Logger.LogInformation("- POST /api/auth/register");
+app.Logger.LogInformation("- POST /api/auth/login");
+app.Logger.LogInformation("- GET /api/auth/verify");
+
 // Database initialization and seeding
-using (var scope = app.Services.CreateScope())
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<BookApiContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        // Check if we can connect to the database
-        var canConnect = await context.Database.CanConnectAsync();
+        var context = scope.ServiceProvider.GetRequiredService<BookApiContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         
-        if (canConnect)
+        try
         {
-            logger.LogInformation("Successfully connected to database");
+            // Check if we can connect to the database
+            var canConnect = await context.Database.CanConnectAsync();
             
-            // Check if database has any data
-            var hasData = await context.Users.AnyAsync();
-            
-            if (!hasData)
+            if (canConnect)
             {
-                logger.LogInformation("Database is empty, seeding test data...");
-                await DatabaseSeeder.SeedAsync(context);
-                logger.LogInformation("Test data seeded successfully");
+                logger.LogInformation("Successfully connected to database");
+                
+                // Check if database has any data
+                var hasData = await context.Users.AnyAsync();
+                
+                if (!hasData)
+                {
+                    logger.LogInformation("Database is empty, seeding test data...");
+                    await DatabaseSeeder.SeedAsync(context);
+                    logger.LogInformation("Test data seeded successfully");
+                }
+                else
+                {
+                    logger.LogInformation("Database already contains data");
+                }
             }
             else
             {
-                logger.LogInformation("Database already contains data");
+                // Database doesn't exist, create it
+                logger.LogInformation("Database doesn't exist, creating...");
+                await context.Database.EnsureCreatedAsync();
+                logger.LogInformation("Database created successfully");
+                
+                // Seed initial data
+                logger.LogInformation("Seeding test data...");
+                await DatabaseSeeder.SeedAsync(context);
+                logger.LogInformation("Test data seeded successfully");
             }
         }
-        else
+        catch (Exception ex)
         {
-            // Database doesn't exist, create it
-            logger.LogInformation("Database doesn't exist, creating...");
-            await context.Database.EnsureCreatedAsync();
-            logger.LogInformation("Database created successfully");
-            
-            // Seed initial data
-            logger.LogInformation("Seeding test data...");
-            await DatabaseSeeder.SeedAsync(context);
-            logger.LogInformation("Test data seeded successfully");
+            logger.LogError(ex, "An error occurred while initializing the database");
+            // Don't throw - let the app start even if seeding fails
         }
     }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred while initializing the database");
-        // Don't throw - let the app start even if seeding fails
-    }
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Failed to initialize database scope");
 }
 
-app.Logger.LogInformation("Application starting on port {Port}", 
-    app.Environment.IsDevelopment() ? "8080" : "80");
+app.Logger.LogInformation("Book API is ready to serve requests on port 80");
+app.Logger.LogInformation($"Listening on: {string.Join(", ", app.Urls)}");
 
+// Run the application
 await app.RunAsync();
 
 public partial class Program { }
