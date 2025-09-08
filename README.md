@@ -19,6 +19,10 @@ A modern book management application built with .NET 9.0 backend and React + Typ
 - Azure Container Apps Environment
 - Application Insights
 
+### Architecture
+
+![Architecture Diagram](./Architecture.png)
+
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository

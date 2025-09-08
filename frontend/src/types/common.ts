@@ -1,3 +1,7 @@
+// frontend/src/types/common.ts
+
+import type React from 'react';
+import type { AdvancedStats } from './book';
 
 export interface ErrorMessageProps {
   message: string;
@@ -6,4 +10,8 @@ export interface ErrorMessageProps {
 
 export interface ProtectedRouteProps {
   children: React.ReactNode;
+}
+
+export interface MetricsGridProps {
+  stats: AdvancedStats;
 }

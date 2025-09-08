@@ -1,3 +1,5 @@
+// frontend/src/hooks/useAdvancedAnalytics.ts
+
 import { useState, useEffect } from 'react';
 import type { AdvancedStats, RatingTrend, GenreTrend } from '../types/book';
 import analyticsService from '../services/analyticsService';
@@ -18,7 +20,7 @@ export const useAdvancedAnalytics = () => {
         const [statsData, ratingData, genreData] = await Promise.all([
           analyticsService.getAdvancedStats(),
           analyticsService.getRatingTrends('month'),
-          analyticsService.getGenreTrends(6),
+          analyticsService.getGenreTrends(),
         ]);
         
         setStats(statsData);

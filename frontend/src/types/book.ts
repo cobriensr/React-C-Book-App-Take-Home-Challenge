@@ -1,3 +1,5 @@
+// frontend/src/types/book.ts
+
 export interface Book {
   id: string;
   title: string;
@@ -45,9 +47,13 @@ export interface RatingTrend {
   count: number;
 }
 
+// Updated to match API's GenreTrendDto structure
 export interface GenreTrend {
-  month: string;
-  genres: Record<string, number>;
+  genre: string;
+  count: number;
+  percentage: number;
+  averageRating: number;
+  totalMinutesRead: number;
 }
 
 export interface ReadingVelocity {

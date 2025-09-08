@@ -1,42 +1,49 @@
-import React from 'react';
-import type { AdvancedStats } from '../../types/book';
+// frontend/src/components/Analytics/MetricsGrid.tsx
 
-interface MetricsGridProps {
-  stats: AdvancedStats;
-}
+import React from 'react';
+import type { MetricsGridProps } from '../../types/common';
 
 export const MetricsGrid: React.FC<MetricsGridProps> = ({ stats }) => {
+  const totalBooks = stats?.totalBooks || 0;
+  const totalFavorites = stats?.totalFavorites || 0;
+  const averageRating = stats?.averageRating || 0;
+  const booksThisMonth = stats?.booksThisMonth || 0;
+  const booksThisYear = stats?.booksThisYear || 0;
+  const readingStreak = stats?.readingStreak || 0;
+  
   const metrics = [
     {
       className: 'primary',
       icon: '📚',
       title: 'Total Books',
-      value: stats.totalBooks,
-      detail: `${stats.booksThisMonth} this month`,
+      value: totalBooks.toString(),
+      detail: `${booksThisMonth} this month`,
     },
     {
       className: 'success',
       icon: '⭐',
       title: 'Average Rating',
-      value: stats.averageRating.toFixed(2),
-      detail: '★'.repeat(Math.round(stats.averageRating)),
+      value: averageRating.toFixed(2),
+      detail: averageRating > 0 ? '★'.repeat(Math.round(averageRating)) : 'No ratings yet',
     },
     {
       className: 'warning',
       icon: '❤️',
       title: 'Favorites',
-      value: stats.totalFavorites,
-      detail: `${((stats.totalFavorites / stats.totalBooks) * 100).toFixed(0)}% of library`,
+      value: totalFavorites.toString(),
+      detail: totalBooks > 0 
+        ? `${((totalFavorites / totalBooks) * 100).toFixed(0)}% of library`
+        : '0% of library',
     },
     {
       className: 'info',
       icon: '🔥',
       title: 'Reading Streak',
-      value: `${stats.readingStreak} days`,
-      detail: `${stats.booksThisYear} books this year`,
+      value: `${readingStreak} days`,
+      detail: `${booksThisYear} books this year`,
     },
   ];
-
+  
   return (
     <div className="metrics-grid">
       {metrics.map((metric, index) => (
