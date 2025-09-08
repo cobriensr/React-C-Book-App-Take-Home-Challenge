@@ -1,5 +1,4 @@
 // frontend/vite.config.ts
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
@@ -9,9 +8,11 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    // Proxy is ONLY for development server
+    // This doesn't affect production builds at all
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8080',
+        target: 'http://localhost:8080', // Local backend for development
         changeOrigin: true,
         secure: false,
       }

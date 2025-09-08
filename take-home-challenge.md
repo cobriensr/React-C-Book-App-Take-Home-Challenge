@@ -64,10 +64,10 @@ Implement pages/components:
 - A backend/ folder with the .NET solution, EF migrations, and instructions.
 - A frontend/ folder with the React source and setup instructions.
 - A root README outlining:
-- Prerequisites and setup steps (dotnet ef database update, npm install, etc.)
-- How to run both apps concurrently.
-- Any design decisions or trade-offs.
-- Swagger/OpenAPI or Postman collection for API testing.
+  - Prerequisites and setup steps (dotnet ef database update, npm install, etc.)
+  - How to run both apps concurrently.
+  - Any design decisions or trade-offs.
+  - Swagger/OpenAPI or Postman collection for API testing.
 
 ### Evaluation Criteria
 
