@@ -8,7 +8,6 @@ import { StatsView } from './StatsView/StatsView';
 import { FavoritesList } from './Favorites/FavoritesList';
 import { AdvancedStatsView } from './Analytics/AdvancedStatsView';
 import type { Book } from '../types/book';
-import '../styles/Dashboard.css';
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
