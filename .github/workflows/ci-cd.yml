@@ -23,7 +23,7 @@ jobs:
         with:
           dotnet-version: '9.0.x'
       
-      - name: Run backend tests
+      - name: Run backend tests (unit tests only)
         run: |
           dotnet restore BookApi.sln
           dotnet build BookApi.sln
@@ -49,6 +49,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Set up build timestamp
+        run: echo "BUILD_TAG=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+      
       - name: Login to ACR
         run: |
           echo ${{ secrets.ACR_PASSWORD }} | docker login \
@@ -61,22 +64,22 @@ jobs:
           # Build for AMD64 (Azure requirement)
           docker buildx create --use
           
-          # Backend
-          echo "Building backend image..."
+          # Backend with unique tag
+          echo "Building backend image with tag: ${{ env.BUILD_TAG }}"
           docker buildx build \
             --platform linux/amd64 \
-            --no-cache \
+            --tag acrbookapp.azurecr.io/backend:${{ env.BUILD_TAG }} \
             --tag acrbookapp.azurecr.io/backend:latest \
             --push \
             ./backend
           
-          # Frontend with stable backend URL
-          echo "Building frontend image with API URL: ${{ secrets.BACKEND_URL }}/api"
+          # Frontend with stable backend URL and unique tag
+          echo "Building frontend image with API URL: ${{ env.BACKEND_URL }}/api and tag: ${{ env.BUILD_TAG }}"
           docker buildx build \
             --platform linux/amd64 \
-            --no-cache \
             --target production \
-            --build-arg VITE_API_URL=${{ secrets.BACKEND_URL }}/api \
+            --build-arg VITE_API_URL=${{ env.BACKEND_URL }}/api \
+            --tag acrbookapp.azurecr.io/frontend:${{ env.BUILD_TAG }} \
             --tag acrbookapp.azurecr.io/frontend:latest \
             --push \
             ./frontend
@@ -86,34 +89,51 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-      - name: Deploy to Azure Container Apps
+      - name: Deploy to Azure Container Apps with forced revision
         run: |
-          # Deploy Backend
-          echo "Deploying backend to Azure Container Apps..."
+          # Deploy Backend with unique image tag and revision suffix
+          echo "Deploying backend with tag: ${{ env.BUILD_TAG }}"
           az containerapp update \
             --name book-app-api \
             --resource-group rg-bookapp-prod \
-            --image acrbookapp.azurecr.io/backend:latest
+            --image acrbookapp.azurecr.io/backend:${{ env.BUILD_TAG }} \
+            --revision-suffix ${{ env.BUILD_TAG }}
           
-          # Deploy Frontend
-          echo "Deploying frontend to Azure Container Apps..."
+          # Deploy Frontend with unique image tag and revision suffix
+          echo "Deploying frontend with tag: ${{ env.BUILD_TAG }}"
           az containerapp update \
             --name book-app-ui \
             --resource-group rg-bookapp-prod \
-            --image acrbookapp.azurecr.io/frontend:latest
+            --image acrbookapp.azurecr.io/frontend:${{ env.BUILD_TAG }} \
+            --revision-suffix ${{ env.BUILD_TAG }}
       
       - name: Verify Deployment
         run: |
           echo "========================================="
           echo "Deployment Complete!"
-          echo "Backend URL: ${{ secrets.BACKEND_URL }}"
-          echo "Frontend URL: ${{ secrets.FRONTEND_URL }}"
+          echo "Build Tag: ${{ env.BUILD_TAG }}"
+          echo "Backend URL: ${{ env.BACKEND_URL }}"
+          echo "Frontend URL: ${{ env.FRONTEND_URL }}"
           echo "========================================="
           
-          # Test backend health endpoint
-          echo "Testing backend health..."
-          curl -f ${{ secrets.BACKEND_URL }}/health || echo "Backend health check failed"
+          # List new revisions
+          echo "Backend revisions:"
+          az containerapp revision list \
+            --name book-app-api \
+            --resource-group rg-bookapp-prod \
+            --query "[0:3].{Name:name, Active:properties.active, Created:properties.createdTime}" \
+            -o table
           
-          # Test frontend
+          echo "Frontend revisions:"
+          az containerapp revision list \
+            --name book-app-ui \
+            --resource-group rg-bookapp-prod \
+            --query "[0:3].{Name:name, Active:properties.active, Created:properties.createdTime}" \
+            -o table
+          
+          # Test endpoints
+          echo "Testing backend health..."
+          curl -f ${{ env.BACKEND_URL }}/health || echo "Backend health check failed"
+          
           echo "Testing frontend..."
-          curl -f ${{ secrets.FRONTEND_URL }} || echo "Frontend check failed"
+          curl -f ${{ env.FRONTEND_URL }} || echo "Frontend check failed"
