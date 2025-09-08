@@ -51,3 +51,15 @@ output "log_analytics_workspace_id" {
   value       = azurerm_log_analytics_workspace.main.workspace_id
   description = "The workspace ID of the Log Analytics workspace"
 }
+
+# ACR Info
+output "acr_login_server" {
+  value       = azurerm_container_registry.main.login_server
+  description = "ACR login server URL"
+}
+
+output "acr_username" {
+  value       = azurerm_container_registry.main.admin_username
+  description = "ACR admin username"
+  sensitive   = true
+}

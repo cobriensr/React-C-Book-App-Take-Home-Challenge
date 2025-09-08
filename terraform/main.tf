@@ -9,6 +9,12 @@ resource "random_password" "sql_password" {
   numeric = true
 }
 
+# Random password for JWT Secret
+resource "random_password" "jwt_secret" {
+  length  = 64
+  special = false # Base64 friendly
+}
+
 # Resource Group
 resource "azurerm_resource_group" "main" {
   name     = "rg-bookapp-prod"
@@ -19,17 +25,6 @@ resource "azurerm_resource_group" "main" {
     Project     = var.project_name
     ManagedBy   = "Terraform"
   }
-}
-
-# Container Registry (for storing Docker images)
-resource "azurerm_container_registry" "main" {
-  name                = "acrbookapp"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  sku                 = "Basic"
-  admin_enabled       = true
-
-  tags = azurerm_resource_group.main.tags
 }
 
 # Virtual Network for Container Apps
@@ -70,4 +65,20 @@ resource "azurerm_subnet" "sql" {
       ]
     }
   }
+}
+
+# SQL Server Firewall Rule for Azure Services
+resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
+  name             = "AllowAzureServices"
+  server_id        = azurerm_mssql_server.main.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+# SQL Server Firewall Rule for your development machine
+resource "azurerm_mssql_firewall_rule" "allow_dev_machine" {
+  name             = "AllowDevMachine"
+  server_id        = azurerm_mssql_server.main.id
+  start_ip_address = "45.45.137.135"
+  end_ip_address   = "45.45.137.135"
 }

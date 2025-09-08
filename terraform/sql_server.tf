@@ -33,14 +33,6 @@ resource "azurerm_mssql_database" "main" {
   tags = azurerm_resource_group.main.tags
 }
 
-# SQL Server Firewall Rule for Azure Services
-resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
-  name             = "AllowAzureServices"
-  server_id        = azurerm_mssql_server.main.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
-}
-
 # SQL Server Virtual Network Rule
 resource "azurerm_mssql_virtual_network_rule" "container_apps" {
   name      = "container-apps-vnet-rule"
