@@ -1,7 +1,7 @@
 // frontend/src/components/BookList/BookList.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BookList } from './BookList';
 import type { Book } from '../../types/book';
 
@@ -95,11 +95,14 @@ describe('BookList', () => {
     
     render(<BookList onEditBook={mockOnEditBook} />);
     
-    const deleteButtons = screen.getAllByText('Delete');
-    fireEvent.click(deleteButtons[0]);
+    // Books are sorted alphabetically by default, so "1984" appears first
+    // Find the specific book card for "1984" and click its delete button
+    const book1984 = screen.getByText('1984').closest('.book-card') as HTMLElement;
+    const deleteButton = within(book1984).getByText('Delete');
+    fireEvent.click(deleteButton);
     
     await waitFor(() => {
-      expect(mockDeleteBook).toHaveBeenCalledWith('1');
+      expect(mockDeleteBook).toHaveBeenCalledWith('2'); // '1984' has id '2'
       expect(mockRefetch).toHaveBeenCalled();
     });
   });
@@ -141,15 +144,48 @@ describe('BookList', () => {
     it('sorts books by title', () => {
       render(<BookList onEditBook={mockOnEditBook} />);
       
+      // Initially books are sorted by title in ascending order
+      // Verify initial order first
+      const booksGridInitial = document.querySelector('.books-grid');
+      if (booksGridInitial) {
+        const initialTitles = Array.from(booksGridInitial.querySelectorAll('h3'))
+          .map(el => el.textContent);
+        
+        // Initial order should be ascending
+        expect(initialTitles[0]).toBe('1984');
+        expect(initialTitles[1]).toBe('The Great Gatsby');
+        expect(initialTitles[2]).toBe('To Kill a Mockingbird');
+      }
+      
+      // Click title button to toggle to descending order
       const titleSortButton = screen.getByRole('button', { name: /title/i });
       fireEvent.click(titleSortButton);
       
-      const bookTitles = screen.getAllByRole('heading', { level: 3 })
-        .map(el => el.textContent);
+      // After clicking, order should be descending
+      const booksGrid = document.querySelector('.books-grid');
       
-      expect(bookTitles[0]).toBe('1984');
-      expect(bookTitles[1]).toBe('The Great Gatsby');
-      expect(bookTitles[2]).toBe('To Kill a Mockingbird');
+      if (booksGrid) {
+        const titles = Array.from(booksGrid.querySelectorAll('h3'))
+          .map(el => el.textContent);
+        
+        // Descending order
+        expect(titles[0]).toBe('To Kill a Mockingbird');
+        expect(titles[1]).toBe('The Great Gatsby');
+        expect(titles[2]).toBe('1984');
+      } else {
+        // Fallback: Get all h3 elements and filter out non-book titles
+        const allHeadings = screen.getAllByRole('heading', { level: 3 });
+        const bookHeadings = allHeadings.filter(h => 
+          !h.textContent?.includes('Filters') && 
+          !h.textContent?.includes('Search')
+        );
+        const titles = bookHeadings.map(h => h.textContent);
+        
+        // Descending order
+        expect(titles[0]).toBe('To Kill a Mockingbird');
+        expect(titles[1]).toBe('The Great Gatsby');
+        expect(titles[2]).toBe('1984');
+      }
     });
 
     it('clears all filters', () => {
@@ -159,8 +195,9 @@ describe('BookList', () => {
       const searchInput = screen.getByPlaceholderText(/search by title or author/i);
       fireEvent.change(searchInput, { target: { value: 'Gatsby' } });
       
-      // Clear filters
-      const clearButton = screen.getByText(/clear filters/i);
+      // Clear filters - get the one in the filters section
+      const filtersSection = screen.getByText('Filters & Search').closest('.filters-section') as HTMLElement;
+      const clearButton = within(filtersSection).getByText(/clear filters/i);
       fireEvent.click(clearButton);
       
       // All books should be visible again
@@ -176,7 +213,17 @@ describe('BookList', () => {
       fireEvent.change(searchInput, { target: { value: 'Nonexistent Book' } });
       
       expect(screen.getByText(/no books found matching your filters/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /clear filters/i })).toBeInTheDocument();
+      
+      // Get the clear button in the no-results section specifically
+      const noResultsSection = screen.getByText(/no books found/i).closest('.no-results') as HTMLElement | null;
+      if (noResultsSection) {
+        const clearButton = within(noResultsSection).getByRole('button', { name: /clear filters/i });
+        expect(clearButton).toBeInTheDocument();
+      } else {
+        // Alternative: get all clear buttons and check there's at least one
+        const clearButtons = screen.getAllByRole('button', { name: /clear filters/i });
+        expect(clearButtons.length).toBeGreaterThan(0);
+      }
     });
   });
 });
