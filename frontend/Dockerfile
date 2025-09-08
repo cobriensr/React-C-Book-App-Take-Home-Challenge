@@ -18,6 +18,10 @@ RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
 # Copy source code
 COPY . .
 
+# Build argument for API URL - using stable backend URL from Terraform
+ARG VITE_API_URL=https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/api
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build the application
 RUN if [ -f yarn.lock ]; then yarn build; \
     elif [ -f pnpm-lock.yaml ]; then pnpm build; \

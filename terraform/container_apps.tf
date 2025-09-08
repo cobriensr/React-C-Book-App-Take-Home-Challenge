@@ -144,11 +144,6 @@ resource "azurerm_container_app" "frontend" {
       memory = "0.5Gi"
 
       env {
-        name  = "VITE_API_URL"
-        value = "https://${azurerm_container_app.backend.latest_revision_fqdn}"
-      }
-
-      env {
         name  = "VITE_APP_INSIGHTS_CONNECTION_STRING"
         value = azurerm_application_insights.main.connection_string
       }

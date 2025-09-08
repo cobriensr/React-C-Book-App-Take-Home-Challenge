@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  # Stable URLs from Terraform outputs
+  BACKEND_URL: https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io
+  FRONTEND_URL: https://book-app-ui.wittydesert-f0d21091.centralus.azurecontainerapps.io
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -57,16 +62,19 @@ jobs:
           docker buildx create --use
           
           # Backend
+          echo "Building backend image..."
           docker buildx build \
             --platform linux/amd64 \
             --tag acrbookapp.azurecr.io/backend:latest \
             --push \
             ./backend
           
-          # Frontend (with production target)
+          # Frontend with stable backend URL
+          echo "Building frontend image with API URL: ${{ env.BACKEND_URL }}/api"
           docker buildx build \
             --platform linux/amd64 \
             --target production \
+            --build-arg VITE_API_URL=${{ env.BACKEND_URL }}/api \
             --tag acrbookapp.azurecr.io/frontend:latest \
             --push \
             ./frontend
@@ -79,12 +87,14 @@ jobs:
       - name: Deploy to Azure Container Apps
         run: |
           # Deploy Backend
+          echo "Deploying backend to Azure Container Apps..."
           az containerapp update \
             --name book-app-api \
             --resource-group rg-bookapp-prod \
             --image acrbookapp.azurecr.io/backend:latest
           
           # Deploy Frontend
+          echo "Deploying frontend to Azure Container Apps..."
           az containerapp update \
             --name book-app-ui \
             --resource-group rg-bookapp-prod \
@@ -92,6 +102,16 @@ jobs:
       
       - name: Verify Deployment
         run: |
-          echo "Backend URL: https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/"
-          echo "Frontend URL: [your-frontend-url]"
-          echo "Deployment complete!"
+          echo "========================================="
+          echo "Deployment Complete!"
+          echo "Backend URL: ${{ env.BACKEND_URL }}"
+          echo "Frontend URL: ${{ env.FRONTEND_URL }}"
+          echo "========================================="
+          
+          # Test backend health endpoint
+          echo "Testing backend health..."
+          curl -f ${{ env.BACKEND_URL }}/health || echo "Backend health check failed"
+          
+          # Test frontend
+          echo "Testing frontend..."
+          curl -f ${{ env.FRONTEND_URL }} || echo "Frontend check failed"
