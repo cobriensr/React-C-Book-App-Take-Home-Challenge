@@ -21,5 +21,5 @@ COPY --from=publish /app/publish .
 # Create non-root user for security
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
-EXPOSE 8080
+EXPOSE 80
 ENTRYPOINT ["dotnet", "BookApi.dll"]
