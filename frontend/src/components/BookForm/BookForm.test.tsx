@@ -2,8 +2,19 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { BookForm } from './BookForm';
 import type { Book } from '../../types/book';
+
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock the useBookMutations hook
 const mockCreateBook = vi.fn();
@@ -18,6 +29,15 @@ vi.mock('../../hooks/useBookMutations', () => ({
   }),
 }));
 
+// Helper function to render with Router
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  );
+};
+
 describe('BookForm', () => {
   const mockOnSuccess = vi.fn();
   const mockOnCancel = vi.fn();
@@ -28,11 +48,12 @@ describe('BookForm', () => {
     mockUpdateBook.mockReset();
     mockOnSuccess.mockReset();
     mockOnCancel.mockReset();
+    mockNavigate.mockReset();
   });
 
   describe('Create Mode', () => {
     it('renders empty form in create mode', () => {
-      render(
+      renderWithRouter(
         <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
@@ -43,7 +64,7 @@ describe('BookForm', () => {
     });
 
     it('validates required fields', async () => {
-      render(
+      renderWithRouter(
         <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
@@ -63,7 +84,7 @@ describe('BookForm', () => {
     it('submits form with valid data', async () => {
       mockCreateBook.mockResolvedValue({});
 
-      render(
+      renderWithRouter(
         <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
@@ -94,6 +115,11 @@ describe('BookForm', () => {
         });
         expect(mockOnSuccess).toHaveBeenCalled();
       });
+
+      // Check that success message appears
+      await waitFor(() => {
+        expect(screen.getByText(/Book added successfully/)).toBeInTheDocument();
+      });
     });
   });
 
@@ -108,7 +134,7 @@ describe('BookForm', () => {
     };
 
     it('renders form with book data in edit mode', () => {
-      render(
+      renderWithRouter(
         <BookForm book={mockBook} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
@@ -120,15 +146,17 @@ describe('BookForm', () => {
     });
 
     it('validates rating range', () => {
-      render(
+      renderWithRouter(
         <BookForm book={mockBook} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
       // Test that all valid ratings are available
       const ratingSelect = screen.getByLabelText(/Rating/);
       
-      [1, 2, 3, 4, 5].forEach(rating => {
-        expect(screen.getByText(`${rating} - ${'★'.repeat(rating)}`)).toBeInTheDocument();
+      // Updated to match the new star display format
+      [5, 4, 3, 2, 1].forEach(rating => {
+        const stars = '★'.repeat(rating) + '☆'.repeat(5-rating);
+        expect(screen.getByText(`${rating} - ${stars}`)).toBeInTheDocument();
       });
 
       // Verify the current value
@@ -138,7 +166,7 @@ describe('BookForm', () => {
     it('updates book with valid data', async () => {
       mockUpdateBook.mockResolvedValue({});
 
-      render(
+      renderWithRouter(
         <BookForm book={mockBook} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
       );
 
@@ -160,11 +188,21 @@ describe('BookForm', () => {
         });
         expect(mockOnSuccess).toHaveBeenCalled();
       });
+
+      // Check for success message and navigation
+      await waitFor(() => {
+        expect(screen.getByText(/Book updated successfully/)).toBeInTheDocument();
+      });
+
+      // Verify navigation happens after timeout
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard/books');
+      }, { timeout: 2000 });
     });
   });
 
   it('calls onCancel when cancel button is clicked', () => {
-    render(
+    renderWithRouter(
       <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
     );
 
@@ -172,10 +210,11 @@ describe('BookForm', () => {
     fireEvent.click(cancelButton);
 
     expect(mockOnCancel).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('/dashboard/books');
   });
 
   it('clears validation errors when field is modified', async () => {
-    render(
+    renderWithRouter(
       <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
     );
 
@@ -196,5 +235,44 @@ describe('BookForm', () => {
     await waitFor(() => {
       expect(screen.queryByText('Title is required')).not.toBeInTheDocument();
     });
+  });
+
+  it('shows success message and clears form after successful creation', async () => {
+    mockCreateBook.mockResolvedValue({});
+
+    renderWithRouter(
+      <BookForm book={null} onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
+    );
+
+    // Fill in the form
+    fireEvent.change(screen.getByLabelText(/Title \*/), {
+      target: { value: 'Test Book' },
+    });
+    fireEvent.change(screen.getByLabelText(/Author \*/), {
+      target: { value: 'Test Author' },
+    });
+    fireEvent.change(screen.getByLabelText(/Genre \*/), {
+      target: { value: 'Fiction' },
+    });
+    fireEvent.change(screen.getByLabelText(/Published Date \*/), {
+      target: { value: '2023-01-01' },
+    });
+
+    const submitButton = screen.getByText('Add Book');
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockCreateBook).toHaveBeenCalled();
+    });
+
+    // Check that success message appears
+    await waitFor(() => {
+      expect(screen.getByText(/Book added successfully/)).toBeInTheDocument();
+    });
+
+    // Check that form is cleared
+    expect(screen.getByLabelText(/Title \*/)).toHaveValue('');
+    expect(screen.getByLabelText(/Author \*/)).toHaveValue('');
+    expect(screen.getByLabelText(/Genre \*/)).toHaveValue('');
   });
 });
