@@ -2,6 +2,9 @@
 
 A modern book management application built with .NET 9.0 backend and React + TypeScript frontend, deployed on Azure Container Apps with Terraform infrastructure.
 
+Frontend URL Login Page: <https://book-app-ui.wittydesert-f0d21091.centralus.azurecontainerapps.io/login>
+Backend URL Swagger Page: <https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/swagger>
+
 ## 📋 Prerequisites
 
 ### Required Software
