@@ -1,0 +1,152 @@
+/* frontend/src/components/StatsView/StatsView.css */
+
+.stats-view {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stats-view h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+/* Stats Summary Cards */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.stat-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.stat-card .stat-value {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+/* Charts Container */
+.charts-container {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+/* Chart Wrapper - Critical for centering */
+.chart-wrapper {
+  position: relative;
+  margin: 0 auto;
+  max-width: 600px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Canvas element styling */
+.chart-wrapper canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Additional chart sections if you add more */
+.chart-section {
+  margin-bottom: 2rem;
+}
+
+.chart-section:last-child {
+  margin-bottom: 0;
+}
+
+.chart-title {
+  text-align: center;
+  color: #555;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+/* Loading and Error states */
+.stats-view .loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.stats-view .error-message {
+  text-align: center;
+  padding: 2rem;
+  color: #e74c3c;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-view {
+    padding: 1rem;
+  }
+  
+  .stats-view h2 {
+    font-size: 1.5rem;
+  }
+  
+  .stats-summary {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
+  
+  .stat-card .stat-value {
+    font-size: 2rem;
+  }
+  
+  .charts-container {
+    padding: 1rem;
+  }
+  
+  .chart-wrapper {
+    max-width: 100%;
+    min-height: 300px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .stat-card {
+    padding: 1.5rem 1rem;
+  }
+  
+  .stat-card .stat-value {
+    font-size: 1.75rem;
+  }
+}

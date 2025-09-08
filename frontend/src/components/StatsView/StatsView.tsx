@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import { ErrorMessage } from '../common/ErrorMessage';
 import { StatsSummary } from './StatsSummary';
 import { StatsCharts } from './StatsCharts';
+import './StatsView.css';
 
 export const StatsView: React.FC = () => {
   const { stats, loading, error } = useBookStats();
