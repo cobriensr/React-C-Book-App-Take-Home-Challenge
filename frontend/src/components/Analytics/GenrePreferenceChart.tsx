@@ -1,3 +1,5 @@
+// frontend/src/components/Analytics/GenrePreferenceChart.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
 import type { GenrePreference } from '../../types/book';

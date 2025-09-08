@@ -1,9 +1,7 @@
-import React from 'react';
+// frontend/src/components/Analytics/PeriodSelector.tsx
 
-interface PeriodSelectorProps {
-  selectedPeriod: 'week' | 'month' | 'year';
-  onPeriodChange: (period: 'week' | 'month' | 'year') => void;
-}
+import React from 'react';
+import type { PeriodSelectorProps } from '../../types/common';
 
 export const PeriodSelector: React.FC<PeriodSelectorProps> = ({ 
   selectedPeriod, 

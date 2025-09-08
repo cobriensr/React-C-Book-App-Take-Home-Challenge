@@ -1,10 +1,8 @@
+// frontend/src/components/Analytics/TopLists.tsx
+
 import React from 'react';
 import type { GenrePreference, AuthorStats } from '../../types/book';
-
-interface TopListsProps {
-  favoriteGenres: GenrePreference[];
-  topAuthors: AuthorStats[];
-}
+import type { TopListsProps } from '../../types/common';
 
 export const TopLists: React.FC<TopListsProps> = ({ favoriteGenres, topAuthors }) => {
   return (

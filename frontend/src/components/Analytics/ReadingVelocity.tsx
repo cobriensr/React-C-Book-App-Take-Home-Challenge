@@ -1,9 +1,7 @@
-import React from 'react';
-import type { ReadingVelocity as VelocityType } from '../../types/book';
+// frontend/src/components/Analytics/ReadingVelocity.tsx
 
-interface ReadingVelocityProps {
-  velocity: VelocityType;
-}
+import React from 'react';
+import type { ReadingVelocityProps } from '../../types/common';
 
 export const ReadingVelocity: React.FC<ReadingVelocityProps> = ({ velocity }) => {
   const metrics = [

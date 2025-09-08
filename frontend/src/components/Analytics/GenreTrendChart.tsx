@@ -1,4 +1,5 @@
 // frontend/src/components/Analytics/GenreTrendChart.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
 import type { GenreTrend } from '../../types/book';

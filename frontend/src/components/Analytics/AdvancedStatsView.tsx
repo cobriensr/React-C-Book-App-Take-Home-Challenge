@@ -9,6 +9,7 @@ import { ReadingVelocity } from './ReadingVelocity';
 import { PeriodSelector } from './PeriodSelector';
 import { ChartsSection } from './ChartsSection';
 import { TopLists } from './TopLists';
+import './AdvancedStatsView.css';
 
 export const AdvancedStatsView: React.FC = () => {
   const { stats, ratingTrends, genreTrends, loading, error, refreshTrends } = useAdvancedAnalytics();

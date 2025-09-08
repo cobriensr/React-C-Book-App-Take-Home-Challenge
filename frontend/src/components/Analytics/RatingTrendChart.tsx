@@ -1,13 +1,10 @@
+// frontend/src/components/Analytics/RatingTrendChart.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
-import type { RatingTrend } from '../../types/book';
+import type { RatingTrendChartProps } from '../../types/common';
 
 Chart.register(...registerables);
-
-interface RatingTrendChartProps {
-  trends: RatingTrend[];
-  period: 'week' | 'month' | 'year';
-}
 
 export const RatingTrendChart: React.FC<RatingTrendChartProps> = ({ trends, period }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);

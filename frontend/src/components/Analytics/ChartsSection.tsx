@@ -1,3 +1,5 @@
+// frontend/src/components/Analytics/ChartsSection.tsx
+
 import React from 'react';
 import type { AdvancedStats, RatingTrend, GenreTrend } from '../../types/book';
 import { RatingTrendChart } from './RatingTrendChart';
