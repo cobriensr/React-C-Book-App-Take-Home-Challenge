@@ -1,7 +1,7 @@
 import type { AdvancedStats, RatingTrend, GenreTrend, ReadingHistoryEntry } from '../types/book';
 import authService from './authService';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = 'https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/api';
 
 class AnalyticsService {
   private getHeaders(): HeadersInit {

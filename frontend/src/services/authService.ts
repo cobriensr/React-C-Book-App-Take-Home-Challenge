@@ -1,6 +1,6 @@
 import type { AuthResponse, LoginCredentials, RegisterData, User } from '../types/auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = 'https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/api';
 
 class AuthService {
   private readonly TOKEN_KEY = 'auth_token';

@@ -2,7 +2,7 @@ import type { Book } from '../types/book';
 import type { Favorite } from '../types/favorite';
 import authService from './authService';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = 'https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/api';
 
 class FavoriteService {
   private getHeaders(): HeadersInit {
