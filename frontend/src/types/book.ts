@@ -1,5 +1,6 @@
 // frontend/src/types/book.ts
 
+import type { Favorite } from './favorite';
 export interface Book {
   id: string;
   title: string;
@@ -81,7 +82,6 @@ export interface BookCardProps {
   onDelete: (id: string) => void;
   showFavoriteButton?: boolean;
 }
-
 export interface BookFormData {
   title: string;
   author: string;
@@ -106,4 +106,16 @@ export interface BookStats {
 export interface ApiError {
   message: string;
   status?: number;
+}
+
+export interface FavoritesContextType {
+  favorites: Favorite[];
+  favoriteBookIds: Set<string>;
+  loading: boolean;
+  error: string | null;
+  toggleFavorite: (bookId: string, notes?: string) => Promise<void>;
+  updateNotes: (bookId: string, notes: string) => Promise<void>;
+  isFavorite: (bookId: string) => boolean;
+  refetch: () => Promise<void>;
+  isInitialized: boolean;
 }

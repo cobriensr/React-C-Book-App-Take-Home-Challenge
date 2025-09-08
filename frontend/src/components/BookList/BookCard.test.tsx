@@ -1,14 +1,30 @@
 // frontend/src/components/BookList/BookCard.test.tsx
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BookCard } from './BookCard';
 import type { Book } from '../../types/book';
 
-// Mock the FavoriteButton component
-vi.mock('../Favorites/FavoriteButton', () => ({
-  FavoriteButton: () => null
+// Mock the FavoritesContext hook
+const mockToggleFavorite = vi.fn();
+const mockIsFavorite = vi.fn();
+
+vi.mock('../../hooks/useFavoritesContext', () => ({
+  useFavoritesContext: () => ({
+    isFavorite: mockIsFavorite,
+    toggleFavorite: mockToggleFavorite,
+    loading: false,
+    isInitialized: true,
+    favorites: [],
+    favoriteBookIds: new Set(),
+    error: null,
+    updateNotes: vi.fn(),
+    refetch: vi.fn(),
+  })
 }));
+
+// Mock window.confirm with proper typing
+global.confirm = vi.fn() as Mock;
 
 describe('BookCard', () => {
   const mockBook: Book = {
@@ -18,10 +34,17 @@ describe('BookCard', () => {
     genre: 'Fiction',
     publishedDate: '2023-01-01T00:00:00Z',
     rating: 4,
+    favoriteCount: 5,
   };
 
   const mockOnEdit = vi.fn();
   const mockOnDelete = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockIsFavorite.mockReturnValue(false);
+    (global.confirm as Mock).mockReturnValue(true);
+  });
 
   it('renders book information correctly', () => {
     render(
@@ -32,6 +55,62 @@ describe('BookCard', () => {
     expect(screen.getByText('by Test Author')).toBeInTheDocument();
     expect(screen.getByText('Fiction')).toBeInTheDocument();
     expect(screen.getByText('★★★★☆')).toBeInTheDocument();
+  });
+
+  it('displays favorite button with correct state', () => {
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    const favoriteBtn = screen.getByRole('button', { name: /add to favorites/i });
+    expect(favoriteBtn).toBeInTheDocument();
+    expect(screen.getByText('🤍')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument(); // favorite count
+  });
+
+  it('displays filled heart when book is favorited', () => {
+    mockIsFavorite.mockReturnValue(true);
+
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    const favoriteBtn = screen.getByRole('button', { name: /remove from favorites/i });
+    expect(favoriteBtn).toBeInTheDocument();
+    expect(screen.getByText('❤️')).toBeInTheDocument();
+  });
+
+  it('toggles favorite when heart button is clicked', async () => {
+    mockToggleFavorite.mockResolvedValue(undefined);
+
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    const favoriteBtn = screen.getByRole('button', { name: /add to favorites/i });
+    fireEvent.click(favoriteBtn);
+
+    await waitFor(() => {
+      expect(mockToggleFavorite).toHaveBeenCalledWith('1');
+    });
+  });
+
+  it('handles favorite toggle error gracefully', async () => {
+    mockToggleFavorite.mockRejectedValue(new Error('Failed to toggle'));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    const favoriteBtn = screen.getByRole('button', { name: /add to favorites/i });
+    fireEvent.click(favoriteBtn);
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to toggle favorite:', expect.any(Error));
+    });
+
+    consoleSpy.mockRestore();
   });
 
   it('calls onEdit when edit button is clicked', () => {
@@ -45,7 +124,9 @@ describe('BookCard', () => {
     expect(mockOnEdit).toHaveBeenCalledWith(mockBook);
   });
 
-  it('calls onDelete when delete button is clicked', () => {
+  it('calls onDelete when delete button is clicked and confirmed', () => {
+    (global.confirm as Mock).mockReturnValue(true);
+
     render(
       <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
     );
@@ -53,19 +134,33 @@ describe('BookCard', () => {
     const deleteButton = screen.getByText('Delete');
     fireEvent.click(deleteButton);
 
-    expect(mockOnDelete).toHaveBeenCalledWith(mockBook.id);
+    expect(global.confirm).toHaveBeenCalledWith('Are you sure you want to delete "Test Book"?');
+    expect(mockOnDelete).toHaveBeenCalledWith('1');
   });
 
-  it('formats date correctly', () => {
-    const { container } = render(
+  it('does not call onDelete when delete is cancelled', () => {
+    (global.confirm as Mock).mockReturnValue(false);
+
+    render(
       <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
     );
 
-    // Cast to HTMLElement
-    const dateElement = container.querySelector('.date') as HTMLElement;
-    expect(dateElement).toBeInTheDocument();
-    // Just check that it contains a valid date format
-    expect(dateElement.textContent).toMatch(/\d{1,2}\/\d{1,2}\/\d{4}/);
+    const deleteButton = screen.getByText('Delete');
+    fireEvent.click(deleteButton);
+
+    expect(global.confirm).toHaveBeenCalled();
+    expect(mockOnDelete).not.toHaveBeenCalled();
+  });
+
+  it('formats date correctly', () => {
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    // Look for the published date text
+    expect(screen.getByText(/Published:/)).toBeInTheDocument();
+    // The date should be formatted as "Jan 1, 2023" or similar
+    expect(screen.getByText(/Published:.*Jan.*1.*2023/)).toBeInTheDocument();
   });
 
   it('renders correct number of stars for rating', () => {
@@ -87,5 +182,72 @@ describe('BookCard', () => {
       expect(screen.getByText(expected)).toBeInTheDocument();
       rerender(<></>);
     });
+  });
+
+  it('shows loading state when favorites are not initialized', () => {
+    // Re-mock the hook for this specific test
+    vi.doMock('../../hooks/useFavoritesContext', () => ({
+      useFavoritesContext: () => ({
+        isFavorite: mockIsFavorite,
+        toggleFavorite: mockToggleFavorite,
+        loading: true,
+        isInitialized: false,
+        favorites: [],
+        favoriteBookIds: new Set(),
+        error: null,
+        updateNotes: vi.fn(),
+        refetch: vi.fn(),
+      })
+    }));
+
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    // Should show loading indicator
+    expect(screen.getByText('⏳')).toBeInTheDocument();
+  });
+
+  it('disables favorite button while toggling', async () => {
+    mockToggleFavorite.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+
+    render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    const favoriteBtn = screen.getByRole('button', { name: /add to favorites/i });
+    fireEvent.click(favoriteBtn);
+
+    // Button should be disabled while toggling
+    expect(favoriteBtn).toBeDisabled();
+
+    await waitFor(() => {
+      expect(favoriteBtn).not.toBeDisabled();
+    });
+  });
+
+  it('updates favorite count when toggling', async () => {
+    mockToggleFavorite.mockResolvedValue(undefined);
+    const { rerender } = render(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    expect(screen.getByText('5')).toBeInTheDocument(); // initial count
+
+    const favoriteBtn = screen.getByRole('button', { name: /add to favorites/i });
+    fireEvent.click(favoriteBtn);
+
+    await waitFor(() => {
+      expect(mockToggleFavorite).toHaveBeenCalled();
+    });
+
+    // After toggling to favorite, count should increase
+    mockIsFavorite.mockReturnValue(true);
+    rerender(
+      <BookCard book={mockBook} onEdit={mockOnEdit} onDelete={mockOnDelete} />
+    );
+
+    // The component should now show 6 (optimistic update)
+    expect(screen.getByText('6')).toBeInTheDocument();
   });
 });
