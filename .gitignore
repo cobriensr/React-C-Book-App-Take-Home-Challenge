@@ -350,7 +350,6 @@ appsettings.Development.json
 appsettings.*.json
 !appsettings.json
 !appsettings.Docker.json
-backend/appsettings.Development.json
 backend/appsettings.*.json
 !backend/appsettings.json
 !backend/appsettings.Docker.json
