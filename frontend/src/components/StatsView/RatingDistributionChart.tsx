@@ -61,13 +61,13 @@ export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = (
       options: {
         responsive: true,
         maintainAspectRatio: true,
-        aspectRatio: 2, // Makes the chart wider and less tall
+        aspectRatio: 1.5, // Changed from 2 to make chart taller
         layout: {
           padding: {
-            left: 10,
-            right: 10,
-            top: 10,
-            bottom: 10
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: 20
           }
         },
         plugins: {
@@ -102,8 +102,9 @@ export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = (
               stepSize: 1,
               precision: 0,
               callback: function(value) {
-                if (typeof value === 'number' && Math.floor(value) === value) {
-                  return value;
+                const numValue = typeof value === 'number' ? value : Number(value);
+                if (Math.floor(numValue) === numValue) {
+                  return numValue;
                 }
                 return null;
               }
