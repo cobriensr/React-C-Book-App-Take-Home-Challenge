@@ -1,9 +1,7 @@
-import React from 'react';
+// components/StatsView/StatsSummary.tsx
 
-interface StatsSummaryProps {
-  totalBooks: number;
-  averageRating: number;
-}
+import React from 'react';
+import type { StatsSummaryProps } from '../../types/common';
 
 export const StatsSummary: React.FC<StatsSummaryProps> = ({ 
   totalBooks, 

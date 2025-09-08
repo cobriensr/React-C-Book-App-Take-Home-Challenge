@@ -15,3 +15,16 @@ export interface ProtectedRouteProps {
 export interface MetricsGridProps {
   stats: AdvancedStats;
 }
+
+export interface StatsChartsProps {
+  booksByRating: Record<number, number>;
+}
+
+export interface StatsSummaryProps {
+  totalBooks: number;
+  averageRating: number;
+}
+
+export interface RatingDistributionChartProps {
+  data: Record<number, number>;
+}

@@ -1,11 +1,10 @@
+// components/StatsView/RatingDistributionChart.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
+import type { RatingDistributionChartProps } from '../../types/common';
 
 Chart.register(...registerables);
-
-interface RatingDistributionChartProps {
-  data: Record<number, number>;
-}
 
 export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = ({ data }) => {
   const chartRef = useRef<HTMLCanvasElement>(null);

@@ -1,4 +1,5 @@
 // frontend/src/components/Dashboard.tsx
+
 import React, { useState } from 'react';
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';

@@ -22,7 +22,6 @@ export const StatsView: React.FC = () => {
         averageRating={stats.averageRating} 
       />
       <StatsCharts 
-        booksByGenre={stats.booksByGenre}
         booksByRating={stats.booksByRating}
       />
     </div>
