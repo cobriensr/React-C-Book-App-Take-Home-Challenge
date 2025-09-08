@@ -34,7 +34,7 @@ Create a `.env` file in the project root:
 
 ```env
 # Azure SQL Connection String (get from Azure Portal or Terraform output)
-AZURE_SQL_CONNECTION_STRING="Server=tcp:<server>.database.windows.net,1433;Initial Catalog=bookdb;..."
+AZURE_SQL_CONNECTION_STRING=""Server=<ask for server name>,1433;Initial Catalog=<asj for db name>;User ID=<ask for id>;Password=<ask for password>;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;""
 
 # JWT Secret (minimum 32 characters)
 
