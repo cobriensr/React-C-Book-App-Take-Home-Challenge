@@ -1,6 +1,8 @@
+// frontend/src/services/authService.ts
+
 import type { AuthResponse, LoginCredentials, RegisterData, User } from '../types/auth';
 
-const API_BASE_URL = 'https://book-app-api.wittydesert-f0d21091.centralus.azurecontainerapps.io/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
@@ -20,9 +22,12 @@ class AuthService {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({
+        emailOrUsername: credentials.email,  // Backend expects emailOrUsername
+        password: credentials.password
+      }),
     });
-    
+
     const data = await this.handleResponse<AuthResponse>(response);
     this.setAuthData(data.token, data.user);
     return data;
@@ -34,9 +39,13 @@ class AuthService {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        username: data.name,  // Map name to username for backend
+        email: data.email,
+        password: data.password
+      }),
     });
-    
+
     const result = await this.handleResponse<AuthResponse>(response);
     this.setAuthData(result.token, result.user);
     return result;
@@ -52,12 +61,12 @@ class AuthService {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         this.logout();
         return null;
       }
-      
+
       const user = await response.json();
       this.setUser(user);
       return user;

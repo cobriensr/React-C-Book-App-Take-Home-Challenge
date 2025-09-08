@@ -1,3 +1,5 @@
+// frontend/src/types/auth.ts
+
 import type { ReactNode } from 'react';
 
 export interface User {
