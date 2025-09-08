@@ -1,81 +1,37 @@
-# docker-compose.dev.yml - Fixed for M1/M2/M3 Macs
-
 services:
-  # Azure SQL Edge - Without volume mount to avoid permission issues
-  db:
-    image: mcr.microsoft.com/azure-sql-edge:latest
-    container_name: book-library-db-dev
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong@Password123
-      - MSSQL_PID=Developer
-    ports:
-      - "1433:1433"
-    networks:
-      - book-library-network-dev
-    # Remove volume mount to avoid permission issues
-    # Data will be stored inside the container
-    
-  # Backend - simplified startup
   backend:
-    image: mcr.microsoft.com/dotnet/sdk:9.0
-    platform: linux/arm64
-    container_name: book-library-api-dev
-    working_dir: /app
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: acrbookapp.azurecr.io/backend:latest
+    ports:
+      - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Database=BookLibraryDb;User Id=sa;Password=YourStrong@Password123;TrustServerCertificate=True;Encrypt=False
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
+      - ConnectionStrings__DefaultConnection=${AZURE_SQL_CONNECTION_STRING}
+    env_file:
+      - .env
     networks:
-      - book-library-network-dev
-    volumes:
-      - ./backend:/app:delegated
-    command: >
-      sh -c "
-        echo 'Waiting for database to be ready...' &&
-        for i in 1 2 3 4 5 6 7 8 9 10; do
-          if dotnet ef database update 2>/dev/null; then
-            echo 'Database is ready and migrations applied!' &&
-            break
-          fi &&
-          echo 'Database not ready, waiting...' &&
-          sleep 5
-        done &&
-        echo 'Starting application...' &&
-        dotnet watch run --urls http://+:8080
-      "
+      - bookapp-network
 
-  # Frontend - only if you have it set up
   frontend:
-    image: node:20-alpine
-    platform: linux/arm64
-    container_name: book-library-frontend-dev
-    working_dir: /app
-    environment:
-      - VITE_API_URL=http://localhost:8080
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development  # Use development stage for hot reload
     ports:
       - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    volumes:
+      - ./frontend:/app  # Mount source code for hot reload
+      - /app/node_modules  # Prevent overwriting node_modules
     depends_on:
       - backend
     networks:
-      - book-library-network-dev
-    volumes:
-      - ./frontend:/app:delegated
-    command: >
-      sh -c "
-        if [ -f package.json ]; then
-          npm install &&
-          npm run dev -- --host 0.0.0.0 --port 3000
-        else
-          echo 'Frontend not set up yet. Skipping...' &&
-          tail -f /dev/null
-        fi
-      "
+      - bookapp-network
 
 networks:
-  book-library-network-dev:
+  bookapp-network:
     driver: bridge

@@ -100,7 +100,6 @@ coverage*.info
 *.db
 *.db-shm
 *.db-wal
-Migrations/
 
 ## SQL Server
 *.mdf
@@ -346,3 +345,12 @@ terraform/.terraform.lock.hcl
 terraform/.tfbackend
 terraform/terraform.tfstate
 terraform/.terraform.tfstate.lock.info
+
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Docker.json
+backend/appsettings.Development.json
+backend/appsettings.*.json
+!backend/appsettings.json
+!backend/appsettings.Docker.json
