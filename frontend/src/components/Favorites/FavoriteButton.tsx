@@ -1,20 +1,35 @@
-import React, { useState } from 'react';
+// frontend/src/components/Favorites/FavoriteButton.tsx
+
+import React, { useState, useEffect } from 'react';
 import { useFavorites } from '../../hooks/useFavorites';
 import type { FavoriteButtonProps } from '../../types/favorite';
 
 export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   bookId,
   showCount = false,
-  favoriteCount = 0,
+  favoriteCount: initialCount = 0,
   onToggle,
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [isToggling, setIsToggling] = useState(false);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [notes, setNotes] = useState('');
+  const [localFavoriteCount, setLocalFavoriteCount] = useState(initialCount);
+  const [isCurrentlyFavorite, setIsCurrentlyFavorite] = useState(false);
+
+  // Initialize and sync favorite state
+  useEffect(() => {
+    setIsCurrentlyFavorite(isFavorite(bookId));
+  }, [bookId, isFavorite]);
+
+  // Update local count when initial count changes
+  useEffect(() => {
+    setLocalFavoriteCount(initialCount);
+  }, [initialCount]);
 
   const handleToggle = async () => {
-    if (!isFavorite(bookId) && showNotesModal) {
+    // If not favorited and we want to show notes modal
+    if (!isCurrentlyFavorite && showNotesModal) {
       setShowNotesModal(true);
       return;
     }
@@ -22,6 +37,18 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
     setIsToggling(true);
     try {
       await toggleFavorite(bookId, notes);
+      
+      // Update local count based on action
+      if (isCurrentlyFavorite) {
+        // Removing favorite - decrease count
+        setLocalFavoriteCount(prev => Math.max(0, prev - 1));
+        setIsCurrentlyFavorite(false);
+      } else {
+        // Adding favorite - increase count
+        setLocalFavoriteCount(prev => prev + 1);
+        setIsCurrentlyFavorite(true);
+      }
+      
       onToggle?.();
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
@@ -36,6 +63,11 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
     setIsToggling(true);
     try {
       await toggleFavorite(bookId, notes);
+      
+      // Adding favorite with notes - increase count
+      setLocalFavoriteCount(prev => prev + 1);
+      setIsCurrentlyFavorite(true);
+      
       onToggle?.();
       setShowNotesModal(false);
       setNotes('');
@@ -49,16 +81,17 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   return (
     <>
       <button
-        className={`favorite-button ${isFavorite(bookId) ? 'favorited' : ''}`}
+        className={`favorite-button ${isCurrentlyFavorite ? 'favorited' : ''}`}
         onClick={handleToggle}
         disabled={isToggling}
-        title={isFavorite(bookId) ? 'Remove from favorites' : 'Add to favorites'}
+        title={isCurrentlyFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        aria-label={`${isCurrentlyFavorite ? 'Remove from' : 'Add to'} favorites. ${localFavoriteCount} ${localFavoriteCount === 1 ? 'person has' : 'people have'} favorited this book`}
       >
         <span className="heart-icon">
-          {isFavorite(bookId) ? '❤️' : '🤍'}
+          {isCurrentlyFavorite ? '❤️' : '🤍'}
         </span>
         {showCount && (
-          <span className="favorite-count">{favoriteCount}</span>
+          <span className="favorite-count">{localFavoriteCount}</span>
         )}
       </button>
 

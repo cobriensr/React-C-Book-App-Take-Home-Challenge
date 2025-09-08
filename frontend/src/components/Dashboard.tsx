@@ -1,5 +1,6 @@
+// frontend/src/components/Dashboard.tsx
 import React, { useState } from 'react';
-import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { BookList } from './BookList/BookList';
 import { BookForm } from './BookForm/BookForm';
@@ -7,17 +8,23 @@ import { StatsView } from './StatsView/StatsView';
 import { FavoritesList } from './Favorites/FavoritesList';
 import { AdvancedStatsView } from './Analytics/AdvancedStatsView';
 import type { Book } from '../types/book';
+import '../styles/Dashboard.css';
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleEditBook = (book: Book) => {
     setEditingBook(book);
+    navigate('/dashboard/add');
   };
 
   const handleFormSuccess = () => {
     setEditingBook(null);
+    // Increment refresh key to force BookList to re-render and fetch new data
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleFormCancel = () => {
@@ -30,7 +37,7 @@ export const Dashboard: React.FC = () => {
         <div className="header-content">
           <h1>📚 Book Library Manager</h1>
           <div className="user-info">
-            <span>Welcome, {user?.name}!</span>
+            <span>Welcome, {user?.username || user?.name || user?.email || 'User'}!</span>
             <button onClick={logout} className="logout-button">
               Logout
             </button>
@@ -54,11 +61,17 @@ export const Dashboard: React.FC = () => {
           </NavLink>
         </nav>
       </header>
-
+      
       <main className="app-main">
         <Routes>
-          <Route path="books" element={<BookList onEditBook={handleEditBook} />} />
-          <Route path="favorites" element={<FavoritesList />} />
+          <Route 
+            path="books" 
+            element={<BookList key={refreshKey} onEditBook={handleEditBook} />} 
+          />
+          <Route 
+            path="favorites" 
+            element={<FavoritesList key={refreshKey} />} 
+          />
           <Route
             path="add"
             element={
@@ -69,8 +82,14 @@ export const Dashboard: React.FC = () => {
               />
             }
           />
-          <Route path="stats" element={<StatsView />} />
-          <Route path="analytics" element={<AdvancedStatsView />} />
+          <Route 
+            path="stats" 
+            element={<StatsView key={refreshKey} />} 
+          />
+          <Route 
+            path="analytics" 
+            element={<AdvancedStatsView key={refreshKey} />} 
+          />
           <Route path="/" element={<Navigate to="books" replace />} />
         </Routes>
       </main>

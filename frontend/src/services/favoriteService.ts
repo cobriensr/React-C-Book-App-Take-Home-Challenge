@@ -1,3 +1,5 @@
+// frontend/src/services/favoriteService.ts
+
 import type { Book } from '../types/book';
 import type { Favorite } from '../types/favorite';
 import authService from './authService';

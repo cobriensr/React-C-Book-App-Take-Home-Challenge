@@ -1,3 +1,5 @@
+// frontend/src/services/bookService.ts
+
 import type { Book, BookFormData, BookStats } from '../types/book';
 import authService from './authService';
 

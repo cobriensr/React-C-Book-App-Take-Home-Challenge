@@ -5,7 +5,8 @@ import type { ReactNode } from 'react';
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
+  name?: string;
 }
 
 export interface AuthResponse {

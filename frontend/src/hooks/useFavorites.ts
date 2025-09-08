@@ -1,3 +1,5 @@
+// frontend/src/hooks/useFavorites.ts
+
 import { useState, useEffect, useCallback } from 'react';
 import type { Favorite } from '../types/favorite';
 import favoriteService from '../services/favoriteService';

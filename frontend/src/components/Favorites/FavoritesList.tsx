@@ -1,3 +1,5 @@
+// frontend/src/components/Favorites/FavoritesList.tsx
+
 import React, { useState } from 'react';
 import { useFavorites } from '../../hooks/useFavorites';
 import { LoadingSpinner } from '../common/LoadingSpinner';

@@ -1,3 +1,5 @@
+// frontend/src/components/Favorites/FavoriteCard.tsx
+
 import React, { useState } from 'react';
 import { useFavorites } from '../../hooks/useFavorites';
 import type { FavoriteCardProps } from '../../types/favorite';

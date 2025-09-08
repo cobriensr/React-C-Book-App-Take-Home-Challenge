@@ -1,3 +1,4 @@
+// frontend/src/services/analyticsService.ts
 import type { AdvancedStats, RatingTrend, GenreTrend, ReadingHistoryEntry } from '../types/book';
 import authService from './authService';
 
@@ -33,34 +34,51 @@ class AnalyticsService {
   }
 
   async getRatingTrends(period: 'week' | 'month' | 'year' = 'month'): Promise<RatingTrend[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/rating-trends?period=${period}`, {
+    // Convert period to number of months
+    const monthsMap = {
+      'week': 1,    // Show last month for week view
+      'month': 12,  // Show last 12 months for month view
+      'year': 60    // Show last 5 years for year view
+    };
+    
+    const months = monthsMap[period];
+    
+    const response = await fetch(`${API_BASE_URL}/analytics/rating-trends?months=${months}`, {
       headers: this.getHeaders(),
     });
     return this.handleResponse<RatingTrend[]>(response);
   }
 
-  async getGenreTrends(months: number = 6): Promise<GenreTrend[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/genre-trends?months=${months}`, {
+  async getGenreTrends(): Promise<GenreTrend[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/genre-trends`, {
       headers: this.getHeaders(),
     });
     return this.handleResponse<GenreTrend[]>(response);
   }
 
-  async getReadingHistory(limit: number = 50): Promise<ReadingHistoryEntry[]> {
-    const response = await fetch(`${API_BASE_URL}/analytics/reading-history?limit=${limit}`, {
+  async getReadingHistory(page: number = 1, pageSize: number = 20): Promise<ReadingHistoryEntry[]> {
+    const response = await fetch(`${API_BASE_URL}/analytics/reading-history?page=${page}&pageSize=${pageSize}`, {
       headers: this.getHeaders(),
     });
     return this.handleResponse<ReadingHistoryEntry[]>(response);
   }
 
-  async logReading(bookId: string, rating?: number): Promise<void> {
+  async logReading(bookId: string, startTime: Date, endTime: Date, pagesRead?: number, notes?: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/analytics/log-reading`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ bookId, rating, ratingDate: new Date().toISOString() }),
+      body: JSON.stringify({ 
+        bookId, 
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        pagesRead: pagesRead || 0,
+        notes: notes || ''
+      }),
     });
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const error = await response.text();
+      throw new Error(error || `HTTP error! status: ${response.status}`);
     }
   }
 }
