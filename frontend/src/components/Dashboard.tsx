@@ -1,6 +1,6 @@
 // frontend/src/components/Dashboard.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { BookList } from './BookList/BookList';
@@ -15,6 +15,37 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Dynamic header height calculation
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(120); // Default fallback height
+
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.offsetHeight;
+        setHeaderHeight(height);
+      }
+    };
+
+    // Calculate initial height
+    updateHeaderHeight();
+
+    // Recalculate on window resize (in case nav wraps on smaller screens)
+    window.addEventListener('resize', updateHeaderHeight);
+
+    // Also observe for any changes to the header element
+    const resizeObserver = new ResizeObserver(updateHeaderHeight);
+    if (headerRef.current) {
+      resizeObserver.observe(headerRef.current);
+    }
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   const handleEditBook = (book: Book) => {
     setEditingBook(book);
@@ -33,7 +64,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="app">
-      <header className="app-header">
+      <header className="app-header" ref={headerRef}>
         <div className="header-content">
           <h1>📚 Book Library Manager</h1>
           <div className="user-info">
@@ -61,15 +92,21 @@ export const Dashboard: React.FC = () => {
         </nav>
       </header>
       
-      <main className="app-main">
+      <main 
+        className="app-main" 
+        style={{ 
+          paddingTop: `${headerHeight + 20}px`, // Adding 20px extra spacing
+          minHeight: `calc(100vh - ${headerHeight}px)`
+        }}
+      >
         <Routes>
-          <Route 
-            path="books" 
-            element={<BookList key={refreshKey} onEditBook={handleEditBook} />} 
+          <Route
+            path="books"
+            element={<BookList key={refreshKey} onEditBook={handleEditBook} />}
           />
-          <Route 
-            path="favorites" 
-            element={<FavoritesList key={refreshKey} />} 
+          <Route
+            path="favorites"
+            element={<FavoritesList key={refreshKey} />}
           />
           <Route
             path="add"
@@ -81,13 +118,13 @@ export const Dashboard: React.FC = () => {
               />
             }
           />
-          <Route 
-            path="stats" 
-            element={<StatsView key={refreshKey} />} 
+          <Route
+            path="stats"
+            element={<StatsView key={refreshKey} />}
           />
-          <Route 
-            path="analytics" 
-            element={<AdvancedStatsView key={refreshKey} />} 
+          <Route
+            path="analytics"
+            element={<AdvancedStatsView key={refreshKey} />}
           />
           <Route path="/" element={<Navigate to="books" replace />} />
         </Routes>
