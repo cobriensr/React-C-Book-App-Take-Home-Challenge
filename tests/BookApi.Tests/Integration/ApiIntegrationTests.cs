@@ -1,17 +1,24 @@
-// Integration/ApiIntegrationTests.cs
+// tests/BookApi.Tests/Integration/ApiIntegrationTests.cs
 
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net.Http.Json;
 using BookApi.Models.DTOs;
 using FluentAssertions;
 using System.Net;
+using BookApi.Tests.Helpers;
 
 namespace BookApi.Tests.Integration
 {
-    public class ApiIntegrationTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+    public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
-        private readonly HttpClient _client = factory.CreateClient();
+        private readonly HttpClient _client;
+        private readonly CustomWebApplicationFactory<Program> _factory;
+
+        public ApiIntegrationTests(CustomWebApplicationFactory<Program> factory)
+        {
+            _factory = factory;
+            _client = _factory.CreateClient();
+        }
 
         [Fact]
         public async Task Register_Login_And_AccessProtectedEndpoint_WorksEndToEnd()
@@ -20,19 +27,27 @@ namespace BookApi.Tests.Integration
             var registerDto = new RegisterDto
             {
                 Email = $"test_{Guid.NewGuid()}@example.com",
-                Username = $"user_{Guid.NewGuid()}",
+                Username = $"user_{Guid.NewGuid().ToString().Substring(0, 8)}",  // Ensure username is short enough
                 Password = "Password123!"
             };
 
             var registerResponse = await _client.PostAsJsonAsync("/api/auth/register", registerDto);
-            registerResponse.StatusCode.Should().Be(HttpStatusCode.Created);
             
+            // Log response if it fails
+            if (registerResponse.StatusCode != HttpStatusCode.Created)
+            {
+                var errorContent = await registerResponse.Content.ReadAsStringAsync();
+                throw new Exception($"Registration failed with status {registerResponse.StatusCode}: {errorContent}");
+            }
+            
+            registerResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
             var authResponse = await registerResponse.Content.ReadFromJsonAsync<AuthResponseDto>();
             authResponse.Should().NotBeNull();
             authResponse!.Token.Should().NotBeNullOrEmpty();
 
             // Use token to access protected endpoint
-            _client.DefaultRequestHeaders.Authorization = 
+            _client.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authResponse.Token);
 
             // Create a book
@@ -51,7 +66,7 @@ namespace BookApi.Tests.Integration
             // Get books
             var getBooksResponse = await _client.GetAsync("/api/books");
             getBooksResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            
+
             var books = await getBooksResponse.Content.ReadFromJsonAsync<List<BookDto>>();
             books.Should().NotBeNull();
             books!.Should().HaveCount(1);

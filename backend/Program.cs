@@ -194,60 +194,63 @@ app.Logger.LogInformation("- POST /api/auth/register");
 app.Logger.LogInformation("- POST /api/auth/login");
 app.Logger.LogInformation("- GET /api/auth/verify");
 
-// Database initialization and seeding
-try
+// Database initialization and seeding (skip in Testing environment)
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    using (var scope = app.Services.CreateScope())
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<BookApiContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        
-        try
+        using (var scope = app.Services.CreateScope())
         {
-            // Check if we can connect to the database
-            var canConnect = await context.Database.CanConnectAsync();
+            var context = scope.ServiceProvider.GetRequiredService<BookApiContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
             
-            if (canConnect)
+            try
             {
-                logger.LogInformation("Successfully connected to database");
+                // Check if we can connect to the database
+                var canConnect = await context.Database.CanConnectAsync();
                 
-                // Check if database has any data
-                var hasData = await context.Users.AnyAsync();
-                
-                if (!hasData)
+                if (canConnect)
                 {
-                    logger.LogInformation("Database is empty, seeding test data...");
-                    await DatabaseSeeder.SeedAsync(context);
-                    logger.LogInformation("Test data seeded successfully");
+                    logger.LogInformation("Successfully connected to database");
+                    
+                    // Check if database has any data
+                    var hasData = await context.Users.AnyAsync();
+                    
+                    if (!hasData)
+                    {
+                        logger.LogInformation("Database is empty, seeding test data...");
+                        await DatabaseSeeder.SeedAsync(context);
+                        logger.LogInformation("Test data seeded successfully");
+                    }
+                    else
+                    {
+                        logger.LogInformation("Database already contains data");
+                    }
                 }
                 else
                 {
-                    logger.LogInformation("Database already contains data");
+                    // Database doesn't exist, create it
+                    logger.LogInformation("Database doesn't exist, creating...");
+                    await context.Database.EnsureCreatedAsync();
+                    logger.LogInformation("Database created successfully");
+                    
+                    // Seed initial data
+                    logger.LogInformation("Seeding test data...");
+                    await DatabaseSeeder.SeedAsync(context);
+                    logger.LogInformation("Test data seeded successfully");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // Database doesn't exist, create it
-                logger.LogInformation("Database doesn't exist, creating...");
-                await context.Database.EnsureCreatedAsync();
-                logger.LogInformation("Database created successfully");
-                
-                // Seed initial data
-                logger.LogInformation("Seeding test data...");
-                await DatabaseSeeder.SeedAsync(context);
-                logger.LogInformation("Test data seeded successfully");
+                logger.LogError(ex, "An error occurred while initializing the database");
+                // Don't throw - let the app start even if seeding fails
             }
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "An error occurred while initializing the database");
-            // Don't throw - let the app start even if seeding fails
-        }
     }
-}
-catch (Exception ex)
-{
-    app.Logger.LogError(ex, "Failed to initialize database scope");
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to initialize database scope");
+    }
 }
 
 app.Logger.LogInformation("Book API is ready to serve requests on port 80");
