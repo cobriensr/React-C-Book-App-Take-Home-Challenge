@@ -9,6 +9,7 @@ using BookApi.Tests.Helpers;
 
 namespace BookApi.Tests.Integration
 {
+    [Trait("Category", "Integration")]
     public class ApiIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
     {
         private readonly HttpClient _client;
