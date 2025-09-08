@@ -39,23 +39,49 @@ export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = (
           {
             label: 'Number of Books',
             data: Object.values(completeData),
-            backgroundColor: '#36A2EB',
-            borderColor: '#2d8bc7',
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(255, 159, 64, 0.6)',
+              'rgba(255, 205, 86, 0.6)',
+              'rgba(75, 192, 192, 0.6)',
+              'rgba(54, 162, 235, 0.6)'
+            ],
+            borderColor: [
+              'rgb(255, 99, 132)',
+              'rgb(255, 159, 64)',
+              'rgb(255, 205, 86)',
+              'rgb(75, 192, 192)',
+              'rgb(54, 162, 235)'
+            ],
             borderWidth: 1,
-            borderRadius: 4,
+            borderRadius: 6,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: true,
+        aspectRatio: 2, // Makes the chart wider and less tall
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: 10
+          }
+        },
         plugins: {
           title: {
             display: true,
             text: 'Books by Rating',
             font: {
               size: 16,
+              weight: 'normal' as const,
             },
+            padding: {
+              top: 10,
+              bottom: 20
+            }
           },
           legend: {
             display: false,
@@ -75,6 +101,12 @@ export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = (
             ticks: {
               stepSize: 1,
               precision: 0,
+              callback: function(value) {
+                if (typeof value === 'number' && Math.floor(value) === value) {
+                  return value;
+                }
+                return null;
+              }
             },
             grid: {
               display: true,
@@ -85,6 +117,11 @@ export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = (
             grid: {
               display: false,
             },
+            ticks: {
+              font: {
+                size: 12
+              }
+            }
           },
         },
       },
@@ -97,5 +134,9 @@ export const RatingDistributionChart: React.FC<RatingDistributionChartProps> = (
     };
   }, [data]);
 
-  return <canvas ref={chartRef}></canvas>;
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <canvas ref={chartRef}></canvas>
+    </div>
+  );
 };

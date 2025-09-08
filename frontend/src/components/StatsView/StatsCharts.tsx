@@ -1,3 +1,5 @@
+// frontend/src/components/StatsView/StatsCharts.tsx
+
 import React from 'react';
 import { RatingDistributionChart } from './RatingDistributionChart';
 import type { StatsChartsProps } from '../../types/common';
