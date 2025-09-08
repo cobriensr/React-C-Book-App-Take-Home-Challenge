@@ -1,0 +1,74 @@
+name: Simple CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Backend tests
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Run backend tests
+        run: |
+          dotnet restore BookApi.sln
+          dotnet build BookApi.sln
+          dotnet test BookApi.sln
+      
+      # Frontend tests
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run test -- --run
+          npm run build
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to ACR
+        run: |
+          echo ${{ secrets.ACR_PASSWORD }} | docker login \
+            ${{ env.AZURE_REGISTRY }} \
+            -u ${{ secrets.ACR_USERNAME }} \
+            --password-stdin
+      
+      - name: Build and push images
+        run: |
+          # Build for AMD64 (Azure requirement)
+          docker buildx create --use
+          
+          # Backend
+          docker buildx build \
+            --platform linux/amd64 \
+            --tag acrbookapp.azurecr.io/backend:latest \
+            --push \
+            ./backend
+          
+          # Frontend  
+          docker buildx build \
+            --platform linux/amd64 \
+            --tag acrbookapp.azurecr.io/frontend:latest \
+            --target production \
+            --push \
+            ./frontend
