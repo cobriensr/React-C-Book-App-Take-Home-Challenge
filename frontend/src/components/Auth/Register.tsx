@@ -1,12 +1,14 @@
 // frontend/src/components/Auth/Register.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 
 export const Register: React.FC = () => {
-  const { register } = useAuth();
+  const { register, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,6 +17,23 @@ export const Register: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // CRITICAL: Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  // Show loading while checking initial auth state
+  if (authLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // Prevent rendering register form if already authenticated
+  if (isAuthenticated) {
+    return <LoadingSpinner />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +53,7 @@ export const Register: React.FC = () => {
 
     try {
       await register(formData.email, formData.password, formData.name);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -57,7 +76,7 @@ export const Register: React.FC = () => {
             <h1>📚</h1>
             <h2>Create Account</h2>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
               <label htmlFor="name">Name</label>

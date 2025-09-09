@@ -1,3 +1,5 @@
+// frontend/src/contexts/AuthContext.tsx
+
 import React, { useState, useEffect } from 'react';
 import type { User, AuthProviderProps } from '../types/auth';
 import authService from '../services/authService';

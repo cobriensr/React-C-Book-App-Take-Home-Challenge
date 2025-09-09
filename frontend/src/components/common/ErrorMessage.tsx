@@ -1,3 +1,5 @@
+// frontend/src/components/common/ErrorMessage.tsx
+
 import React from 'react';
 import type { ErrorMessageProps } from '../../types/common';
 
