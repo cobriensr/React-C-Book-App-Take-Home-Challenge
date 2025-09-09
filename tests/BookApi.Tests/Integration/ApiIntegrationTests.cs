@@ -62,14 +62,14 @@ namespace BookApi.Tests.Integration
             var bookResponse = await _client.PostAsJsonAsync("/api/books", createBookDto);
             bookResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-            // UPDATED: Read as BookWithStatsDto instead of BookDto
+            // Read as BookWithStatsDto
             var createdBook = await bookResponse.Content.ReadFromJsonAsync<BookWithStatsDto>();
             createdBook.Should().NotBeNull();
             createdBook!.Title.Should().Be("Integration Test Book");
             createdBook.FavoriteCount.Should().Be(0);  // New book should have 0 favorites
             createdBook.IsFavoritedByCurrentUser.Should().BeFalse();  // User hasn't favorited it yet
 
-            // Get books - UPDATED to use BookWithStatsDto
+            // Get books
             var getBooksResponse = await _client.GetAsync("/api/books");
             getBooksResponse.StatusCode.Should().Be(HttpStatusCode.OK);
             
