@@ -25,21 +25,25 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <FavoritesProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/dashboard/*"
-                element={
-                  <ProtectedRoute>
+          <Routes>
+            {/* Auth routes - NO FavoritesProvider here */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Protected routes - FavoritesProvider only wraps authenticated routes */}
+            <Route
+              path="/dashboard/*"
+              element={
+                <ProtectedRoute>
+                  <FavoritesProvider>
                     <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </FavoritesProvider>
+                  </FavoritesProvider>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </AuthProvider>
       </Router>
     </QueryClientProvider>
