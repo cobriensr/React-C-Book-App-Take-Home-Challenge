@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useFavorites } from '../../hooks/useFavorites';
 import type { FavoriteCardProps } from '../../types/favorite';
+import './FavoriteCard.css';
 
 export const FavoriteCard: React.FC<FavoriteCardProps> = ({ favorite, onRemove }) => {
   const { toggleFavorite, updateNotes } = useFavorites();

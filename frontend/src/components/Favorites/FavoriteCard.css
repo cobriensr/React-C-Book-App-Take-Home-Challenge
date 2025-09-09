@@ -1,0 +1,190 @@
+/* frontend/src/components/Favorites/FavoriteCard.css */
+
+.favorite-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.favorite-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.favorite-card-header h3 {
+  margin: 0;
+  color: #333;  /* Dark text color */
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.remove-favorite {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.remove-favorite:hover {
+  transform: scale(1.1);
+}
+
+.book-author {
+  color: #666;  /* Medium gray for author */
+  font-style: italic;
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+
+.book-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.genre-tag {
+  background: #6366f1;  /* Purple/blue background */
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.rating {
+  color: #fbbf24;  /* Gold color for stars */
+  font-size: 1rem;
+  letter-spacing: 2px;
+}
+
+.favorite-meta {
+  margin: 12px 0;
+}
+
+.added-date {
+  color: #999;  /* Light gray for date */
+  font-size: 0.85rem;
+}
+
+.favorite-notes {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.notes-editor textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #333;  /* Dark text in textarea */
+  background: white;
+  resize: vertical;
+}
+
+.notes-editor textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.notes-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.notes-actions button {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.notes-actions button:first-child {
+  background: #6366f1;
+  color: white;
+}
+
+.notes-actions button:first-child:hover {
+  background: #5558e3;
+}
+
+.notes-actions button:last-child {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.notes-actions button:last-child:hover {
+  background: #d0d0d0;
+}
+
+.notes-display {
+  position: relative;
+}
+
+.notes-display p {
+  color: #555;  /* Dark gray for notes text */
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+  white-space: pre-wrap;
+}
+
+.edit-notes-btn,
+.add-notes-btn {
+  background: transparent;
+  border: 1px solid #6366f1;
+  color: #6366f1;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.edit-notes-btn:hover,
+.add-notes-btn:hover {
+  background: #6366f1;
+  color: white;
+}
+
+/* Ensure proper text color in all browsers */
+.favorite-card * {
+  color: inherit;
+}
+
+.favorite-card h3,
+.favorite-card p,
+.favorite-card span {
+  color: #333;
+}
+
+.favorite-card .book-author {
+  color: #666;
+}
+
+.favorite-card .added-date {
+  color: #999;
+}
+
+.favorite-card .genre-tag {
+  color: white;
+}
