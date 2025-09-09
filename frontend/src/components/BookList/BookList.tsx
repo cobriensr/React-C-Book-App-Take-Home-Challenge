@@ -1,6 +1,6 @@
 // frontend/src/components/BookList/BookList.tsx
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useBooks } from '../../hooks/useBooks';
 import { useBookMutations } from '../../hooks/useBookMutations';
 import type { Book } from '../../types/book';
@@ -20,6 +20,9 @@ export const BookList: React.FC<BookListProps> = ({ onEditBook }) => {
   const { deleteBook } = useBookMutations();
   const [view, setView] = useState<'grid' | 'table'>('grid');
   
+  // Add state to track if we're refreshing after a favorite action
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
   // Filtering states
   const [genreFilter, setGenreFilter] = useState<string>('all');
   const [ratingFilter, setRatingFilter] = useState<number>(0);
@@ -32,6 +35,26 @@ export const BookList: React.FC<BookListProps> = ({ onEditBook }) => {
   // Sorting states
   const [sortField, setSortField] = useState<SortField>('title');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  // Listen for favorite changes and refetch books
+  useEffect(() => {
+    const handleBooksNeedRefresh = (event: CustomEvent) => {
+      console.log('Books refresh triggered by favorite action:', event.detail);
+      setIsRefreshing(true);
+      
+      // Small delay to ensure backend has processed the change
+      setTimeout(() => {
+        refetch().finally(() => setIsRefreshing(false));
+      }, 300);
+    };
+
+    // Listen for the custom event from FavoritesContext
+    window.addEventListener('booksNeedRefresh', handleBooksNeedRefresh as EventListener);
+    
+    return () => {
+      window.removeEventListener('booksNeedRefresh', handleBooksNeedRefresh as EventListener);
+    };
+  }, [refetch]);
 
   // Extract unique genres for filter dropdown
   const genres = useMemo(() => {
@@ -121,7 +144,8 @@ export const BookList: React.FC<BookListProps> = ({ onEditBook }) => {
     setSearchQuery('');
   };
 
-  if (loading) return <LoadingSpinner />;
+  // Show loading only on initial load, not during refresh
+  if (loading && !isRefreshing) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={error} onRetry={refetch} />;
 
   return (
@@ -266,6 +290,8 @@ export const BookList: React.FC<BookListProps> = ({ onEditBook }) => {
                   book={book}
                   onEdit={onEditBook}
                   onDelete={handleDelete}
+                  // Remove this line - BookCard handles favorites internally
+                  // onFavoriteToggle={() => handleFavoriteToggle(book.id)}
                 />
               ))}
             </div>

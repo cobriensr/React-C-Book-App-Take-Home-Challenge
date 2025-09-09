@@ -1,3 +1,5 @@
+// frontend/src/hooks/useBooks.ts
+
 import { useState, useEffect } from 'react';
 import type { Book } from '../types/book';
 import bookService from '../services/bookService';

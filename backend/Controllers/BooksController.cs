@@ -40,7 +40,7 @@ namespace BookApi.Controllers
 
         // GET: api/books
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks(
+        public async Task<ActionResult<IEnumerable<BookWithStatsDto>>> GetBooks(
             [FromQuery] string? genre = null,
             [FromQuery] string? author = null,
             [FromQuery] string? search = null,
@@ -116,12 +116,43 @@ namespace BookApi.Controllers
                 var totalCount = await query.CountAsync();
 
                 // Apply pagination
-                var books = await query
+                var paginatedBooks = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
 
-                var bookDtos = _mapper.Map<List<BookDto>>(books);
+                // Now get the favorite counts and check if current user favorited each book
+                var bookIds = paginatedBooks.Select(b => b.Id).ToList();
+                
+                // Get all favorites for these books
+                var favorites = await _context.Favorites
+                    .Where(f => bookIds.Contains(f.BookId) && f.IsActive)
+                    .ToListAsync();
+
+                // Build the result with stats
+                var booksWithStats = paginatedBooks.Select(book => new BookWithStatsDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Genre = book.Genre,
+                    PublishedDate = book.PublishedDate,
+                    Rating = book.Rating,
+                    CreatedAt = book.CreatedAt,
+                    UpdatedAt = book.UpdatedAt,
+                    // Count ALL users who favorited this book
+                    FavoriteCount = favorites.Count(f => f.BookId == book.Id),
+                    // Check if current user favorited this book
+                    IsFavoritedByCurrentUser = favorites.Any(f => f.BookId == book.Id && f.UserId == userId)
+                }).ToList();
+
+                // If sorting by favoritecount, re-sort the results
+                if (sortBy.ToLower() == "favoritecount")
+                {
+                    booksWithStats = descending 
+                        ? booksWithStats.OrderByDescending(b => b.FavoriteCount).ToList()
+                        : booksWithStats.OrderBy(b => b.FavoriteCount).ToList();
+                }
 
                 // Add pagination metadata to response headers
                 Response.Headers.Append("X-Total-Count", totalCount.ToString());
@@ -129,7 +160,7 @@ namespace BookApi.Controllers
                 Response.Headers.Append("X-Page-Size", pageSize.ToString());
                 Response.Headers.Append("X-Total-Pages", Math.Ceiling((double)totalCount / pageSize).ToString());
 
-                return Ok(bookDtos);
+                return Ok(booksWithStats);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -145,7 +176,7 @@ namespace BookApi.Controllers
 
         // GET: api/books/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<BookDto>> GetBook(Guid id)
+        public async Task<ActionResult<BookWithStatsDto>> GetBook(Guid id)
         {
             try
             {
@@ -159,8 +190,26 @@ namespace BookApi.Controllers
                     return NotFound(new { message = "Book not found" });
                 }
 
-                var bookDto = _mapper.Map<BookDto>(book);
-                return Ok(bookDto);
+                // Get favorite stats for this book
+                var favorites = await _context.Favorites
+                    .Where(f => f.BookId == id && f.IsActive)
+                    .ToListAsync();
+
+                var bookWithStats = new BookWithStatsDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Genre = book.Genre,
+                    PublishedDate = book.PublishedDate,
+                    Rating = book.Rating,
+                    CreatedAt = book.CreatedAt,
+                    UpdatedAt = book.UpdatedAt,
+                    FavoriteCount = favorites.Count,
+                    IsFavoritedByCurrentUser = favorites.Any(f => f.UserId == userId)
+                };
+
+                return Ok(bookWithStats);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -175,7 +224,7 @@ namespace BookApi.Controllers
 
         // POST: api/books
         [HttpPost]
-        public async Task<ActionResult<BookDto>> CreateBook([FromBody] CreateBookDto createBookDto)
+        public async Task<ActionResult<BookWithStatsDto>> CreateBook([FromBody] CreateBookDto createBookDto)
         {
             try
             {
@@ -187,7 +236,7 @@ namespace BookApi.Controllers
                 var userId = GetCurrentUserId();
                 
                 var book = _mapper.Map<Book>(createBookDto);
-                book.UserId = userId; // Set the book owner
+                book.UserId = userId;
                 book.Id = Guid.NewGuid();
                 book.CreatedAt = DateTime.UtcNow;
                 book.UpdatedAt = DateTime.UtcNow;
@@ -195,10 +244,23 @@ namespace BookApi.Controllers
                 _context.Books.Add(book);
                 await _context.SaveChangesAsync();
 
-                var bookDto = _mapper.Map<BookDto>(book);
+                // Return BookWithStatsDto instead of BookDto
+                var bookWithStats = new BookWithStatsDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Genre = book.Genre,
+                    PublishedDate = book.PublishedDate,
+                    Rating = book.Rating,
+                    CreatedAt = book.CreatedAt,
+                    UpdatedAt = book.UpdatedAt,
+                    FavoriteCount = 0,  // New book has no favorites yet
+                    IsFavoritedByCurrentUser = false  // User hasn't favorited it yet
+                };
                 
                 _logger.LogInformation($"Book created: {book.Id} by user: {userId}");
-                return CreatedAtAction(nameof(GetBook), new { id = book.Id }, bookDto);
+                return CreatedAtAction(nameof(GetBook), new { id = book.Id }, bookWithStats);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -213,7 +275,7 @@ namespace BookApi.Controllers
 
         // PUT: api/books/{id}
         [HttpPut("{id}")]
-        public async Task<ActionResult<BookDto>> UpdateBook(Guid id, [FromBody] UpdateBookDto updateBookDto)
+        public async Task<ActionResult<BookWithStatsDto>> UpdateBook(Guid id, [FromBody] UpdateBookDto updateBookDto)
         {
             try
             {
@@ -251,10 +313,27 @@ namespace BookApi.Controllers
                     return Conflict(new { message = "The book has been modified by another user. Please refresh and try again." });
                 }
 
-                var bookDto = _mapper.Map<BookDto>(book);
+                // Get favorite stats for the updated book
+                var favorites = await _context.Favorites
+                    .Where(f => f.BookId == id && f.IsActive)
+                    .ToListAsync();
+
+                var bookWithStats = new BookWithStatsDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Genre = book.Genre,
+                    PublishedDate = book.PublishedDate,
+                    Rating = book.Rating,
+                    CreatedAt = book.CreatedAt,
+                    UpdatedAt = book.UpdatedAt,
+                    FavoriteCount = favorites.Count,
+                    IsFavoritedByCurrentUser = favorites.Any(f => f.UserId == userId)
+                };
                 
                 _logger.LogInformation($"Book updated: {book.Id} by user: {userId}");
-                return Ok(bookDto);
+                return Ok(bookWithStats);
             }
             catch (UnauthorizedAccessException ex)
             {

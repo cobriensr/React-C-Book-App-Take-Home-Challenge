@@ -9,6 +9,8 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onEdit, onDelete }) =>
   const { isFavorite, toggleFavorite, loading: favoritesLoading, isInitialized } = useFavoritesContext();
   const [isCurrentlyFavorite, setIsCurrentlyFavorite] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  
+  // Use the book's favoriteCount from the backend, not local state
   const [localFavoriteCount, setLocalFavoriteCount] = useState(book.favoriteCount || 0);
 
   // Update favorite state when favorites are initialized or book changes
@@ -19,11 +21,16 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onEdit, onDelete }) =>
     }
   }, [book.id, isFavorite, isInitialized]);
 
+  // Update local count when book prop changes (e.g., after refresh)
+  useEffect(() => {
+    setLocalFavoriteCount(book.favoriteCount || 0);
+  }, [book.favoriteCount]);
+
   const handleToggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event
+    e.stopPropagation();
     
     if (isToggling || !isInitialized) return;
-    
+
     setIsToggling(true);
     try {
       await toggleFavorite(book.id);
@@ -32,16 +39,20 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onEdit, onDelete }) =>
       const newFavoriteState = !isCurrentlyFavorite;
       setIsCurrentlyFavorite(newFavoriteState);
       
-      // Update local count
+      // Update local count optimistically
       if (newFavoriteState) {
         setLocalFavoriteCount(prev => prev + 1);
       } else {
         setLocalFavoriteCount(prev => Math.max(0, prev - 1));
       }
+      
+      // Trigger a refetch of books to get accurate counts from backend
+      // This should be done through your onEdit or a refetch callback
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
       // Revert on error
       setIsCurrentlyFavorite(isFavorite(book.id));
+      setLocalFavoriteCount(book.favoriteCount || 0);
     } finally {
       setIsToggling(false);
     }
@@ -68,6 +79,7 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onEdit, onDelete }) =>
       return (
         <button className="favorite-btn" disabled>
           <span style={{ opacity: 0.5 }}>⏳</span>
+          <span className="favorite-count">{book.favoriteCount || 0}</span>
         </button>
       );
     }

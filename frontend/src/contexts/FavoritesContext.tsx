@@ -4,10 +4,8 @@ import React, { useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Favorite } from '../types/favorite';
 import favoriteService from '../services/favoriteService';
 import { FavoritesContext } from '../hooks/useFavoritesContext';
-import { useAuth } from '../hooks/useAuth';
 
 export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading: authLoading } = useAuth();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [favoriteBookIds, setFavoriteBookIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -15,13 +13,6 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchFavorites = useCallback(async () => {
-    // Don't fetch if not authenticated
-    if (!isAuthenticated) {
-      setLoading(false);
-      setIsInitialized(true);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -35,21 +26,13 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
-    // Wait for auth to be determined before fetching
-    if (!authLoading) {
-      fetchFavorites();
-    }
-  }, [fetchFavorites, authLoading]);
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   const toggleFavorite = useCallback(async (bookId: string, notes?: string) => {
-    // Prevent operations if not authenticated
-    if (!isAuthenticated) {
-      throw new Error('Must be logged in to favorite books');
-    }
-
     try {
       if (favoriteBookIds.has(bookId)) {
         await favoriteService.removeFavorite(bookId);
@@ -64,17 +47,20 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         setFavoriteBookIds(prev => new Set(prev).add(bookId));
         setFavorites(prev => [...prev, favorite]);
       }
+      
+      // IMPORTANT: Trigger a books refetch to update global counts
+      // Dispatch a custom event that BookList can listen to
+      window.dispatchEvent(new CustomEvent('booksNeedRefresh', { 
+        detail: { bookId, action: favoriteBookIds.has(bookId) ? 'removed' : 'added' }
+      }));
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to toggle favorite');
       throw err;
     }
-  }, [favoriteBookIds, isAuthenticated]);
+  }, [favoriteBookIds]);
 
   const updateNotes = useCallback(async (bookId: string, notes: string) => {
-    if (!isAuthenticated) {
-      throw new Error('Must be logged in to update notes');
-    }
-
     try {
       const updated = await favoriteService.updateFavoriteNotes(bookId, notes);
       setFavorites(prev =>
@@ -84,7 +70,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
       setError(err instanceof Error ? err.message : 'Failed to update notes');
       throw err;
     }
-  }, [isAuthenticated]);
+  }, []);
 
   const isFavorite = useCallback((bookId: string): boolean => {
     return favoriteBookIds.has(bookId);
@@ -93,7 +79,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const value = React.useMemo(() => ({
     favorites,
     favoriteBookIds,
-    loading: loading || authLoading, // Include auth loading state
+    loading,
     error,
     toggleFavorite,
     updateNotes,
@@ -104,7 +90,6 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     favorites,
     favoriteBookIds,
     loading,
-    authLoading,
     error,
     toggleFavorite,
     updateNotes,

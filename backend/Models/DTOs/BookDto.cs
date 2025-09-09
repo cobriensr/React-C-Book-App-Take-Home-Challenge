@@ -14,6 +14,24 @@ namespace BookApi.Models.DTOs
         public int Rating { get; set; }
     }
 
+        public class BookWithStatsDto
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Author { get; set; } = string.Empty;
+        public string Genre { get; set; } = string.Empty;
+        public DateTime PublishedDate { get; set; }
+        public int Rating { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        
+        // Global count of ALL users who favorited this book
+        public int FavoriteCount { get; set; }
+        
+        // Whether the current logged-in user has favorited this book
+        public bool IsFavoritedByCurrentUser { get; set; }
+    }
+
     public class CreateBookDto
     {
         [Required(ErrorMessage = "Title is required")]

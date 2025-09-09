@@ -13,6 +13,7 @@ export interface Book {
   favoriteCount?: number;
   averageRating?: number;
   totalRatings?: number;
+  isFavoritedByCurrentUser: boolean;
 }
 
 export interface ReadingHistoryEntry {
@@ -81,6 +82,7 @@ export interface BookCardProps {
   onEdit: (book: Book) => void;
   onDelete: (id: string) => void;
   showFavoriteButton?: boolean;
+  onFavoriteToggle?: () => void;
 }
 export interface BookFormData {
   title: string;
